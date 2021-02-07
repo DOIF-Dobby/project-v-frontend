@@ -1,4 +1,9 @@
-import React, { ChangeEvent, SyntheticEvent, useCallback, useState } from 'react';
+import React, {
+  ChangeEvent,
+  SyntheticEvent,
+  useCallback,
+  useState,
+} from 'react';
 import './App.css';
 import {
   Button,
@@ -14,7 +19,8 @@ import {
   Page,
   Box,
   Loading,
-  Datepicker
+  Datepicker,
+  Textarea,
 } from 'doif-react-kit';
 import { ThemeProvider } from 'styled-components';
 import 'doif-react-kit/dist/datepicker.css';
@@ -49,10 +55,14 @@ function App() {
   }, []);
 
   const onChangeDate = useCallback(
-    (date: Date | null, e: SyntheticEvent<any, Event> | undefined, name: string | undefined) => {
+    (
+      date: Date | null,
+      e: SyntheticEvent<any, Event> | undefined,
+      name: string | undefined
+    ) => {
       setStartDate(date);
     },
-    [],
+    []
   );
 
   const data = [
@@ -121,9 +131,19 @@ function App() {
               <Input placeholder="안녕하세요" />
               <Input placeholder="안녕하세요" color="secondary" />
               <Input placeholder="안녕하세요" variant="underline" />
-              <Input placeholder="안녕하세요" variant="underline" color="secondary" />
-              <Input placeholder="안녕하세요" frontIcon={<Icon icon="heart" />} />
-              <Input placeholder="안녕하세요" backIcon={<Icon icon="heart" />} />
+              <Input
+                placeholder="안녕하세요"
+                variant="underline"
+                color="secondary"
+              />
+              <Input
+                placeholder="안녕하세요"
+                frontIcon={<Icon icon="heart" />}
+              />
+              <Input
+                placeholder="안녕하세요"
+                backIcon={<Icon icon="heart" />}
+              />
               <Input
                 placeholder="안녕하세요"
                 frontIcon={<Icon icon="check" />}
@@ -149,21 +169,44 @@ function App() {
                 name="checkbox1"
                 onChange={onChange}
               />
-              <Radio data={data} value={value} name="radiobox1" onChange={onChageRadio}/>
-              <Select data={data} value={value} onChange={onChageSelect}/>
-              <Select data={data} value={value} onChange={onChageSelect} variant="underline"/>
-              <Select data={data} value={value} onChange={onChageSelect} color="secondary" />
-              <Select data={data} value={value} onChange={onChageSelect} color="secondary" variant="underline"/>
+              <Radio
+                data={data}
+                value={value}
+                name="radiobox1"
+                onChange={onChageRadio}
+              />
+              <Select data={data} value={value} onChange={onChageSelect} />
+              <Select
+                data={data}
+                value={value}
+                onChange={onChageSelect}
+                variant="underline"
+              />
+              <Select
+                data={data}
+                value={value}
+                onChange={onChageSelect}
+                color="secondary"
+              />
+              <Select
+                data={data}
+                value={value}
+                onChange={onChageSelect}
+                color="secondary"
+                variant="underline"
+              />
             </Container>
             <Container>
               <Tab
-              tabs={tabs}
-              selected={selected}
-              name="tab-sample"
-              onChange={onChangeTab} />
+                tabs={tabs}
+                selected={selected}
+                name="tab-sample"
+                onChange={onChangeTab}
+              />
             </Container>
             <Container>
               <Datepicker selected={startDate} onChange={onChangeDate} />
+              <Textarea />
             </Container>
           </Container>
         </Box>
