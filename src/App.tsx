@@ -2,6 +2,7 @@ import React, {
   ChangeEvent,
   SyntheticEvent,
   useCallback,
+  useRef,
   useState,
 } from 'react';
 import './App.css';
@@ -21,8 +22,11 @@ import {
   Loading,
   Datepicker,
   Textarea,
+  MarkdownEditor,
+  MarkdownPreview
 } from 'doif-react-kit';
 import { ThemeProvider } from 'styled-components';
+import marked from "marked";
 import 'doif-react-kit/dist/datepicker.css';
 
 function App() {
@@ -31,6 +35,9 @@ function App() {
   const [value, setValue] = useState<string>('hi');
   const [selected, setSelected] = useState('TAB_1');
   const [startDate, setStartDate] = useState<Date | null>(new Date());
+  const [content, setContent] = useState('');
+
+  const markdownRef: React.LegacyRef<HTMLDivElement> = useRef(null)
 
   const onChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
     const { checked, value: codeValue } = e.target;
@@ -54,6 +61,11 @@ function App() {
     setSelected(e.target.value);
   }, []);
 
+  const onChangeMarkdown = useCallback((markdown: string) => {
+    setContent(markdown);
+  }, []);
+
+
   const onChangeDate = useCallback(
     (
       date: Date | null,
@@ -73,20 +85,16 @@ function App() {
   const tabs = [
     {
       id: 'TAB_1',
-      name: '가맹점정보',
+      name: '마크다운 에디터',
       disabled: false,
-      content: <div>탭 1입니다.</div>,
+      content: <MarkdownEditor content={content} onChangeMarkdown={onChangeMarkdown} />,
     },
     {
       id: 'TAB_3',
-      name: '담당자정보',
+      name: '마크다운 프리뷰',
       disabled: false,
       content: (
-        <Container>
-          <Input />
-          <Button>안녕하세요</Button>
-          <Button variant="outline">안녕하세요</Button>
-        </Container>
+          <MarkdownPreview markdown={marked(content)} />
       ),
     },
   ];
@@ -208,6 +216,7 @@ function App() {
               <Datepicker selected={startDate} onChange={onChangeDate} />
               <Textarea />
             </Container>
+            
           </Container>
         </Box>
       </Page>
