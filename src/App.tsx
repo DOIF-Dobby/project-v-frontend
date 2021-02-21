@@ -6,220 +6,89 @@ import React, {
   useState,
 } from 'react';
 import './App.css';
-import {
-  Button,
-  theme,
-  GlobalStyle,
-  Icon,
-  Container,
-  Input,
-  Check,
-  Radio,
-  Select,
-  Tab,
-  Page,
-  Box,
-  Loading,
-  Datepicker,
-  Textarea,
-  MarkdownEditor,
-  MarkdownPreview
-} from 'doif-react-kit';
-import { ThemeProvider } from 'styled-components';
-import marked from "marked";
+import { theme, GlobalStyle, SideMenu, MenuProps } from 'doif-react-kit';
+import styled, { ThemeProvider } from 'styled-components';
 import 'doif-react-kit/dist/datepicker.css';
+import { Route } from 'react-router-dom';
+import Test from './pages/Test';
+import Entp1 from './pages/Entp1';
+import Entp2 from './pages/Entp2';
+
+import smallLogo from './images/v-logo-small.png';
+import bigLogo from './images/v-logo-big.png';
 
 function App() {
   const [themeName, setThemeName] = useState('light');
-  const [values, setValues] = useState<Array<string>>([]);
-  const [value, setValue] = useState<string>('hi');
-  const [selected, setSelected] = useState('TAB_1');
-  const [startDate, setStartDate] = useState<Date | null>(new Date());
-  const [content, setContent] = useState('');
 
-  const markdownRef: React.LegacyRef<HTMLDivElement> = useRef(null)
-
-  const onChange = useCallback((e: ChangeEvent<HTMLInputElement>) => {
-    const { checked, value: codeValue } = e.target;
-
-    setValues((value) =>
-      checked
-        ? value.concat(codeValue)
-        : value.filter((val) => val !== codeValue)
-    );
-  }, []);
-
-  const onChageRadio = useCallback((e: ChangeEvent<HTMLInputElement>) => {
-    setValue(e.target.value);
-  }, []);
-
-  const onChageSelect = useCallback((e: ChangeEvent<HTMLSelectElement>) => {
-    setValue(e.target.value);
-  }, []);
-
-  const onChangeTab = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setSelected(e.target.value);
-  }, []);
-
-  const onChangeMarkdown = useCallback((markdown: string) => {
-    setContent(markdown);
-  }, []);
-
-
-  const onChangeDate = useCallback(
-    (
-      date: Date | null,
-      e: SyntheticEvent<any, Event> | undefined,
-      name: string | undefined
-    ) => {
-      setStartDate(date);
-    },
-    []
-  );
-
-  const data = [
-    { code: 'hi', name: '안녕하세요' },
-    { code: 'hello', name: '반갑습니다.' },
-  ];
-
-  const tabs = [
+  const menus: Array<MenuProps> = [
     {
-      id: 'TAB_1',
-      name: '마크다운 에디터',
-      disabled: false,
-      content: <MarkdownEditor content={content} onChangeMarkdown={onChangeMarkdown} />,
+      code: 'CATEGORY_01',
+      name: '기본정보 관리',
+      sort: 1,
+      depth: 1,
+      type: 'CATEGORY',
+      icon: 'heart',
     },
     {
-      id: 'TAB_3',
-      name: '마크다운 프리뷰',
-      disabled: false,
-      content: (
-          <MarkdownPreview markdown={marked(content)} />
-      ),
+      code: 'CATEGORY_01_01',
+      name: '가맹점 정보',
+      sort: 1,
+      depth: 2,
+      type: 'CATEGORY',
+      icon: '',
+    },
+    {
+      code: 'MENU_01',
+      name: '가맹점 정보 관리',
+      sort: 1,
+      depth: 3,
+      type: 'MENU',
+      icon: '',
+      url: '/entp1',
+    },
+    {
+      code: 'MENU_02',
+      name: '계약승인처리',
+      sort: 2,
+      depth: 3,
+      type: 'MENU',
+      icon: '',
+      url: '/entp2',
+    },
+    {
+      code: 'CATEGORY_01_02',
+      name: '원천사업자 정보',
+      sort: 2,
+      depth: 2,
+      type: 'CATEGORY',
+      icon: '',
+    },
+    {
+      code: 'MENU_03',
+      name: '원천사업자 정보 관리',
+      sort: 1,
+      depth: 3,
+      type: 'MENU',
+      icon: '',
+      url: '/optr1',
     },
   ];
 
   return (
     <ThemeProvider theme={theme[themeName]}>
       <GlobalStyle />
-      <Page>
-        <Box>
-          {/* <Loading/> */}
-          <Container direction="column">
-            <Container style={{ alignItems: 'center' }}>
-              <Button>안녕</Button>
-              <Button color="secondary">안녕</Button>
-              <Button color="secondary" variant="outline">
-                안녕
-              </Button>
-              <Icon icon="heart" />
-              <Icon icon="heart" color="secondary" />
-              <Icon icon="heart" style={{ fill: '#f00', width: '4rem' }} />
-              <Button>
-                <Icon icon="heart" />
-                버튼
-              </Button>
-              <Button color="secondary" variant="outline">
-                버튼
-                <Icon icon="heart" color="secondary" />
-              </Button>
-              <Button iconOnly>
-                <Icon icon="heart" />
-              </Button>
-              <Button
-                style={{
-                  backgroundColor: '#eaeaea',
-                  borderRadius: '1.25rem',
-                  width: '2.5rem',
-                  height: '2.5rem',
-                }}
-                iconOnly>
-                <Icon icon="heart" style={{ fill: '#f00' }} />
-              </Button>
-              <Input placeholder="안녕하세요" />
-              <Input placeholder="안녕하세요" color="secondary" />
-              <Input placeholder="안녕하세요" variant="underline" />
-              <Input
-                placeholder="안녕하세요"
-                variant="underline"
-                color="secondary"
-              />
-              <Input
-                placeholder="안녕하세요"
-                frontIcon={<Icon icon="heart" />}
-              />
-              <Input
-                placeholder="안녕하세요"
-                backIcon={<Icon icon="heart" />}
-              />
-              <Input
-                placeholder="안녕하세요"
-                frontIcon={<Icon icon="check" />}
-                backIcon={<Icon icon="calendar" />}
-              />
-              <Input
-                placeholder="안녕하세요"
-                variant="underline"
-                frontIcon={<Icon icon="check" />}
-                backIcon={<Icon icon="calendar" />}
-              />
-              <button
-                onClick={() =>
-                  setThemeName(themeName === 'light' ? 'dark' : 'light')
-                }>
-                토글
-              </button>
-            </Container>
-            <Container>
-              <Check
-                data={data}
-                values={values}
-                name="checkbox1"
-                onChange={onChange}
-              />
-              <Radio
-                data={data}
-                value={value}
-                name="radiobox1"
-                onChange={onChageRadio}
-              />
-              <Select data={data} value={value} onChange={onChageSelect} />
-              <Select
-                data={data}
-                value={value}
-                onChange={onChageSelect}
-                variant="underline"
-              />
-              <Select
-                data={data}
-                value={value}
-                onChange={onChageSelect}
-                color="secondary"
-              />
-              <Select
-                data={data}
-                value={value}
-                onChange={onChageSelect}
-                color="secondary"
-                variant="underline"
-              />
-            </Container>
-            <Container>
-              <Tab
-                tabs={tabs}
-                selected={selected}
-                name="tab-sample"
-                onChange={onChangeTab}
-              />
-            </Container>
-            <Container>
-              <Datepicker selected={startDate} onChange={onChangeDate} />
-              <Textarea />
-            </Container>
-            
-          </Container>
-        </Box>
-      </Page>
+
+      <SideMenu
+        smallLogo={<img src={smallLogo} />}
+        bigLogo={<img src={bigLogo} />}
+        menus={menus}
+      />
+
+      <div>
+        <Route path="/" component={Test} exact />
+        <Route path="/entp1" component={Entp1} />
+        <Route path="/entp2" component={Entp2} />
+      </div>
     </ThemeProvider>
   );
 }
