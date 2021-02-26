@@ -1,9 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { SideMenu, MenuProps, CategoryProps } from 'doif-react-kit';
-import { useWindowSize } from '../hooks/useWindowSize';
 import smallLogo from '../images/v-logo-small.png';
 import bigLogo from '../images/v-logo-big.png';
-import { DoifColorType } from 'doif-react-kit/dist/types/styles/themes/DoifThemeProps';
 
 const items: Array<CategoryProps | MenuProps> = [
   {
@@ -66,33 +64,19 @@ const items: Array<CategoryProps | MenuProps> = [
   },
 ];
 
-function Menu() {
-  const [isFold, setIsFold] = useState(() => {
-    return window.innerWidth < 720;
-  });
-  const windowSize = useWindowSize();
+interface AppMenuProps {
+  isFold: boolean;
+}
 
-  useEffect(() => {
-    const isFold = windowSize.width
-      ? windowSize.width < 720
-        ? true
-        : false
-      : false;
-
-    setIsFold(() => {
-      console.log(isFold);
-      return isFold;
-    });
-  }, [windowSize]);
-
+function AppMenu({ isFold }: AppMenuProps) {
   return (
     <SideMenu
-      smallLogo={<img src={smallLogo} />}
-      bigLogo={<img src={bigLogo} />}
+      smallLogo={<img src={smallLogo} alt="로고" />}
+      bigLogo={<img src={bigLogo} alt="로고" />}
       items={items}
       isFold={isFold}
     />
   );
 }
 
-export default Menu;
+export default React.memo(AppMenu);
