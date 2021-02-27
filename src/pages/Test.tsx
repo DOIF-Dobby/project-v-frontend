@@ -44,7 +44,7 @@ function Test() {
     setValues((value) =>
       checked
         ? value.concat(codeValue)
-        : value.filter((val) => val !== codeValue)
+        : value.filter((val) => val !== codeValue),
     );
   }, []);
 
@@ -68,11 +68,11 @@ function Test() {
     (
       date: Date | null,
       e: SyntheticEvent<any, Event> | undefined,
-      name: string | undefined
+      name: string | undefined,
     ) => {
       setStartDate(date);
     },
-    []
+    [],
   );
 
   const data = [
@@ -98,9 +98,9 @@ function Test() {
   ];
 
   return (
-    <Page>
-      <Box>
-        {/* <Loading/> */}
+    <Container direction="column" gap="0.75rem">
+      <Box height="425px">
+        {/* <Loading /> */}
         <Container direction="column">
           <Container style={{ alignItems: 'center' }}>
             <Button>안녕</Button>
@@ -129,7 +129,8 @@ function Test() {
                 width: '2.5rem',
                 height: '2.5rem',
               }}
-              iconOnly>
+              iconOnly
+            >
               <Icon icon="heart" style={{ fill: '#f00' }} />
             </Button>
             <Input placeholder="안녕하세요" />
@@ -140,6 +141,8 @@ function Test() {
               variant="underline"
               color="secondary"
             />
+          </Container>
+          <Container>
             <Input placeholder="안녕하세요" frontIcon={<Icon icon="heart" />} />
             <Input placeholder="안녕하세요" backIcon={<Icon icon="heart" />} />
             <Input
@@ -189,20 +192,22 @@ function Test() {
             />
           </Container>
           <Container>
-            <Tab
-              tabs={tabs}
-              selected={selected}
-              name="tab-sample"
-              onChange={onChangeTab}
-            />
-          </Container>
-          <Container>
             <Datepicker selected={startDate} onChange={onChangeDate} />
             <Textarea />
           </Container>
         </Container>
       </Box>
-    </Page>
+      <Box height="425px">
+        <Container>
+          <Tab
+            tabs={tabs}
+            selected={selected}
+            name="tab-sample"
+            onChange={onChangeTab}
+          />
+        </Container>
+      </Box>
+    </Container>
   );
 }
 

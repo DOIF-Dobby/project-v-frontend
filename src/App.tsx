@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import './App.css';
-import { theme, GlobalStyle } from 'doif-react-kit';
+import { theme, GlobalStyle, Page } from 'doif-react-kit';
 import styled, { ThemeProvider } from 'styled-components';
 import 'doif-react-kit/dist/datepicker.css';
 import { Route } from 'react-router-dom';
@@ -61,9 +61,11 @@ function App() {
       <AppMenu isFold={isFold} />
 
       <PageContainer paddingLeft={paddingLeft}>
-        <Route path="/" component={Test} exact />
-        <Route path="/entp1" component={Entp1} />
-        <Route path="/entp2" component={Entp2} />
+        <Page>
+          <Route path="/" component={Test} exact />
+          <Route path="/entp1" component={Entp1} />
+          <Route path="/entp2" component={Entp2} />
+        </Page>
       </PageContainer>
     </ThemeProvider>
   );
@@ -74,12 +76,16 @@ interface PageContainerProps {
 }
 
 const PageContainer = styled.div<PageContainerProps>`
-  padding-left: ${(props) => props.paddingLeft};
-  padding-top: 3rem;
+  left: ${(props) => props.paddingLeft};
+  top: 3rem;
+  width: calc(100% - ${(props) => props.paddingLeft});
+  min-height: calc(100% - 3rem);
+  background-color: ${(props) => props.theme.subColors.pageBackground};
+  position: absolute;
 
-  @media only screen and (max-width: 720px) {
+  /* @media only screen and (max-width: 720px) {
     padding-left: 3rem;
-  }
+  } */
 `;
 
 export default App;

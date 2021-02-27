@@ -1,13 +1,16 @@
-import { Box, Page } from 'doif-react-kit';
+import { Box, Container, Page } from 'doif-react-kit';
 import React from 'react';
 
 function Entp1() {
   return (
-    <Page>
+    <Container gap="0.75rem">
       <Box>
-        <div style={{ textAlign: 'center' }}>ENTP 1</div>
+        <div style={{ textAlign: 'center', height: '830px' }}>ENTP 1</div>
       </Box>
-    </Page>
+      <Box>
+        <div style={{ textAlign: 'center', height: '830px' }}>ENTP 1</div>
+      </Box>
+    </Container>
   );
 }
 
