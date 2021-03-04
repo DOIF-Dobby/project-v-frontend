@@ -10,6 +10,7 @@ import Entp2 from './pages/Entp2';
 import AppMenu from './components/AppMenu';
 import AppHeader from './components/AppHeader';
 import { useWindowSize } from './hooks/useWindowSize';
+import Optr1 from './pages/Optr1';
 
 function App() {
   const [themeName, setThemeName] = useState('light');
@@ -65,6 +66,7 @@ function App() {
           <Route path="/" component={Test} exact />
           <Route path="/entp1" component={Entp1} />
           <Route path="/entp2" component={Entp2} />
+          <Route path="/optr1" component={Optr1} />
         </Page>
       </PageContainer>
     </ThemeProvider>
