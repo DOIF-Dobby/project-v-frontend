@@ -9,6 +9,7 @@ import {
   LabelInput,
   LabelRadio,
   LabelSelect,
+  LabelTextarea,
   Row,
   useChange,
   useChangeCheck,
@@ -34,6 +35,7 @@ function Optr1() {
     selectValue2: '',
     radioValue1: '',
     radioValue2: '',
+    textareaValue1: '',
   });
 
   const [dateForm, onChangeDate, resetDate] = useChangeDate({
@@ -55,6 +57,7 @@ function Optr1() {
     selectValue2,
     radioValue1,
     radioValue2,
+    textareaValue1,
   } = inputForm;
 
   const { startDate, endDate, month, time } = dateForm;
@@ -95,14 +98,12 @@ function Optr1() {
             value={inputValue1}
             name="inputValue1"
             onChange={onChange}
-            enterKeyHint
           />
           <LabelInput
             label="Input 2"
             value={inputValue2}
             name="inputValue2"
             onChange={onChange}
-            enterKeyHint
           />
         </Row>
         <Row>
@@ -186,6 +187,14 @@ function Optr1() {
             onChange={onChange}
           />
         </Row>
+        <Row>
+          <LabelTextarea
+            label="Textarea 1"
+            value={textareaValue1}
+            onChange={onChange}
+            name="textareaValue1"
+          />
+        </Row>
         <InFormContainer align="center">
           <Button type="submit">호잇</Button>
           <Button variant="outline" onClick={onReset}>
@@ -197,4 +206,4 @@ function Optr1() {
   );
 }
 
-export default Optr1;
+export default React.memo(Optr1);
