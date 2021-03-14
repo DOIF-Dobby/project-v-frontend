@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import './App.css';
 import { theme, GlobalStyle, Page } from 'doif-react-kit';
 import styled, { ThemeProvider } from 'styled-components';
-import 'doif-react-kit/dist/datepicker.css';
+import 'doif-react-kit/dist/doif-react-kit.css';
 import { Route } from 'react-router-dom';
 import Test from './pages/Test';
 import Entp1 from './pages/Entp1';
@@ -11,6 +11,7 @@ import AppMenu from './components/AppMenu';
 import AppHeader from './components/AppHeader';
 import { useWindowSize } from './hooks/useWindowSize';
 import Optr1 from './pages/Optr1';
+import Dev1 from './pages/Dev1';
 
 function App() {
   const [themeName, setThemeName] = useState('light');
@@ -67,6 +68,7 @@ function App() {
           <Route path="/entp1" component={Entp1} />
           <Route path="/entp2" component={Entp2} />
           <Route path="/optr1" component={Optr1} />
+          <Route path="/dev1" component={Dev1} />
         </Page>
       </PageContainer>
     </ThemeProvider>
