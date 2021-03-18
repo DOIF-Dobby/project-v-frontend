@@ -6,6 +6,7 @@ import {
   Page,
   Scroll,
   Table,
+  TableGroupHeaderProps,
   TableModelProps,
 } from 'doif-react-kit';
 import React, { useCallback, useMemo } from 'react';
@@ -40,19 +41,47 @@ function Dev1() {
     [],
   );
 
+  const groupHeaders: TableGroupHeaderProps[] = useMemo(
+    () => [
+      {
+        startColumn: 'batchConfTypeNm',
+        size: 3,
+        label: '그룹 헤더 1',
+      },
+      {
+        startColumn: 'remark1',
+        size: 2,
+        label: '그룹 헤더 2',
+      },
+    ],
+    [],
+  );
+
   return (
     <Container gap="0.75rem">
       <Box>
-        <div style={{ textAlign: 'center', height: '830px' }}>
-          <Table
-            model={model}
-            data={data}
-            caption="테이블 1"
-            buttons={buttons}
-            onSelectRow={onSelectRow}
-            onMultiSelectRow={onMultiSelectRow}
-            enableMultiSelectRow
-          />
+        <div>
+          <Container direction="column">
+            <Table
+              model={model}
+              data={data}
+              caption="테이블 1"
+              buttons={buttons}
+              onSelectRow={onSelectRow}
+              onMultiSelectRow={onMultiSelectRow}
+              enableMultiSelectRow
+            />
+            <Table
+              model={model}
+              data={data}
+              caption="테이블 2"
+              buttons={buttons}
+              onSelectRow={onSelectRow}
+              onMultiSelectRow={onMultiSelectRow}
+              groupHeaders={groupHeaders}
+              enableMultiSelectRow
+            />
+          </Container>
         </div>
       </Box>
     </Container>
