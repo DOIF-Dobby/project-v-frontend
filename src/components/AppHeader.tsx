@@ -72,6 +72,8 @@ function AppHeader({
   /** ProfileField 아이템 클릭했을 때 */
   const onClickProfileItem = useCallback(() => {
     setVisibleProfileField(false);
+    localStorage.removeItem('jwtToken');
+    window.location.href = '/';
   }, []);
 
   /** SettingField 아이템 클릭했을 때 */
