@@ -6,6 +6,7 @@ import AppHeader from '../components/AppHeader';
 import AppMenu from '../components/AppMenu';
 import { useWindowSize } from '../hooks/useWindowSize';
 import Dev1 from './Dev1';
+import Dev2 from './Dev2';
 import Entp1 from './Entp1';
 import Entp2 from './Entp2';
 import Optr1 from './Optr1';
@@ -40,10 +41,6 @@ function Main() {
     [],
   );
 
-  const onClickTheme = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setThemeName(e.target.value);
-  }, []);
-
   useEffect(() => {
     setPaddingLeft(isFold ? '3rem' : '15rem');
   }, [isFold]);
@@ -52,7 +49,6 @@ function Main() {
     <>
       <AppHeader
         onClickHamburgerButton={onClickHamburgerButton}
-        onClickTheme={onClickTheme}
         paddingLeft={paddingLeft}
         currentTheme={themeName}
       />
@@ -65,6 +61,7 @@ function Main() {
           <Route path="/entp2" component={Entp2} />
           <Route path="/optr1" component={Optr1} />
           <Route path="/dev1" component={Dev1} />
+          <Route path="/dev2" component={Dev2} />
         </Page>
       </PageContainer>
     </>

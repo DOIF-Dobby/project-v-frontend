@@ -15,7 +15,9 @@ import React, {
   useRef,
   useState,
 } from 'react';
+import { useRecoilState } from 'recoil';
 import defaultProfilePicture from '../images/default-profile-picture.png';
+import { themeState } from '../pages/Index';
 
 interface AppHeaderProps {
   paddingLeft: string;
@@ -23,15 +25,9 @@ interface AppHeaderProps {
   onClickHamburgerButton: (
     event: React.MouseEvent<HTMLButtonElement, MouseEvent>,
   ) => void;
-  onClickTheme: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
-function AppHeader({
-  currentTheme,
-  paddingLeft,
-  onClickHamburgerButton,
-  onClickTheme,
-}: AppHeaderProps) {
+function AppHeader({ paddingLeft, onClickHamburgerButton }: AppHeaderProps) {
   const [searchField, setSearchField] = useState<React.ReactNode>('');
   const [profileField, setProfileField] = useState<React.ReactNode>('');
   const [settingField, setSettingField] = useState<React.ReactNode>('');
@@ -122,26 +118,14 @@ function AppHeader({
   const onClickSetting = useCallback(
     (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
       setVisibleSettingField((visibleProfileField) => !visibleProfileField);
-      setSettingField(
-        <Setting
-          onClickCloseButton={onClickCloseButton}
-          onClickTheme={onClickTheme}
-          currentTheme={currentTheme}
-        />,
-      );
+      setSettingField(<Setting onClickCloseButton={onClickCloseButton} />);
     },
-    [onClickCloseButton, currentTheme, onClickTheme],
+    [onClickCloseButton],
   );
 
   useEffect(() => {
-    setSettingField(
-      <Setting
-        onClickCloseButton={onClickCloseButton}
-        onClickTheme={onClickTheme}
-        currentTheme={currentTheme}
-      />,
-    );
-  }, [onClickCloseButton, onClickTheme, currentTheme]);
+    setSettingField(<Setting onClickCloseButton={onClickCloseButton} />);
+  }, [onClickCloseButton]);
 
   return (
     <Header
@@ -169,8 +153,6 @@ function AppHeader({
 
 interface SettingProps {
   onClickCloseButton: () => void;
-  onClickTheme: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  currentTheme: string;
 }
 
 const themeData: Array<DoifDataProps> = Object.keys(theme).map((t) => ({
@@ -178,11 +160,14 @@ const themeData: Array<DoifDataProps> = Object.keys(theme).map((t) => ({
   name: t,
 }));
 
-function Setting({
-  onClickCloseButton,
-  onClickTheme,
-  currentTheme,
-}: SettingProps) {
+function Setting({ onClickCloseButton }: SettingProps) {
+  const [theme, setTheme] = useRecoilState(themeState);
+
+  const onClickTheme = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setTheme(e.target.value);
+    localStorage.setItem('AppTheme', e.target.value);
+  }, []);
+
   return (
     <Container style={{ padding: '0.5rem' }} direction="column">
       <Container align="right">
@@ -203,7 +188,7 @@ function Setting({
         <Radio
           data={themeData}
           name="themes"
-          value={currentTheme}
+          value={theme}
           onChange={onClickTheme}
         />
       </Container>

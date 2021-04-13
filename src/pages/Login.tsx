@@ -18,8 +18,10 @@ function Login() {
     (params: Object) => axios.post('/login', params),
     {
       onSuccess: (res) => {
-        localStorage.setItem('jwtToken', res.headers.authorization);
-        window.location.reload();
+        axios.defaults.headers.common['Authorization'] =
+          res.headers.authorization;
+
+        console.log(axios.defaults.headers);
       },
       onError: (err) => {
         setError(true);
