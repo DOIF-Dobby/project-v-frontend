@@ -1,11 +1,12 @@
+import axios from 'axios';
 import {
   Button,
   Container,
   Header,
   Icon,
   Radio,
-  useOutsideAlerter,
   theme,
+  useOutsideAlerter,
 } from 'doif-react-kit';
 import { DoifDataProps } from 'doif-react-kit/dist/types/props/DoifCommonProps';
 import React, {
@@ -15,29 +16,31 @@ import React, {
   useRef,
   useState,
 } from 'react';
+import { useMutation } from 'react-query';
+import { useRecoilState, useSetRecoilState } from 'recoil';
 import defaultProfilePicture from '../images/default-profile-picture.png';
+import { loginSelector, themeState } from '../pages/Index';
 
 interface AppHeaderProps {
   paddingLeft: string;
-  currentTheme: string;
   onClickHamburgerButton: (
     event: React.MouseEvent<HTMLButtonElement, MouseEvent>,
   ) => void;
-  onClickTheme: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
-function AppHeader({
-  currentTheme,
-  paddingLeft,
-  onClickHamburgerButton,
-  onClickTheme,
-}: AppHeaderProps) {
+function AppHeader({ paddingLeft, onClickHamburgerButton }: AppHeaderProps) {
   const [searchField, setSearchField] = useState<React.ReactNode>('');
   const [profileField, setProfileField] = useState<React.ReactNode>('');
   const [settingField, setSettingField] = useState<React.ReactNode>('');
   const [visibleSearchField, setVisibleSearchField] = useState(false);
   const [visibleProfileField, setVisibleProfileField] = useState(false);
   const [visibleSettingField, setVisibleSettingField] = useState(false);
+  const setLogin = useSetRecoilState(loginSelector);
+  const logoutMutation = useMutation(() => axios.post('/logout'), {
+    onSuccess: (res) => {
+      setLogin(res.data);
+    },
+  });
 
   // SearchField 바깥 쪽 클릭했을 때 닫히게 하는 함수
   const searchFieldRef: RefObject<HTMLDivElement> = useRef(null);
@@ -74,6 +77,11 @@ function AppHeader({
     setVisibleProfileField(false);
   }, []);
 
+  const onClickLogout = useCallback(() => {
+    setVisibleProfileField(false);
+    logoutMutation.mutate();
+  }, [logoutMutation]);
+
   /** SettingField 아이템 클릭했을 때 */
   const onClickCloseButton = useCallback(() => {
     setVisibleSettingField(false);
@@ -105,7 +113,7 @@ function AppHeader({
           <div style={{ border: `1px solid red` }} onClick={onClickProfileItem}>
             프로필 변경
           </div>
-          <div style={{ border: `1px solid red` }} onClick={onClickProfileItem}>
+          <div style={{ border: `1px solid red` }} onClick={onClickLogout}>
             로그아웃
           </div>
         </div>
@@ -113,33 +121,21 @@ function AppHeader({
 
       setProfileField(profileItem);
     },
-    [onClickProfileItem],
+    [onClickProfileItem, onClickLogout],
   );
 
   /** Setting 클릭했을 때 */
   const onClickSetting = useCallback(
     (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
       setVisibleSettingField((visibleProfileField) => !visibleProfileField);
-      setSettingField(
-        <Setting
-          onClickCloseButton={onClickCloseButton}
-          onClickTheme={onClickTheme}
-          currentTheme={currentTheme}
-        />,
-      );
+      setSettingField(<Setting onClickCloseButton={onClickCloseButton} />);
     },
-    [onClickCloseButton, currentTheme, onClickTheme],
+    [onClickCloseButton],
   );
 
   useEffect(() => {
-    setSettingField(
-      <Setting
-        onClickCloseButton={onClickCloseButton}
-        onClickTheme={onClickTheme}
-        currentTheme={currentTheme}
-      />,
-    );
-  }, [onClickCloseButton, onClickTheme, currentTheme]);
+    setSettingField(<Setting onClickCloseButton={onClickCloseButton} />);
+  }, [onClickCloseButton]);
 
   return (
     <Header
@@ -167,8 +163,6 @@ function AppHeader({
 
 interface SettingProps {
   onClickCloseButton: () => void;
-  onClickTheme: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  currentTheme: string;
 }
 
 const themeData: Array<DoifDataProps> = Object.keys(theme).map((t) => ({
@@ -176,11 +170,17 @@ const themeData: Array<DoifDataProps> = Object.keys(theme).map((t) => ({
   name: t,
 }));
 
-function Setting({
-  onClickCloseButton,
-  onClickTheme,
-  currentTheme,
-}: SettingProps) {
+function Setting({ onClickCloseButton }: SettingProps) {
+  const [theme, setTheme] = useRecoilState(themeState);
+
+  const onClickTheme = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setTheme(e.target.value);
+      localStorage.setItem('AppTheme', e.target.value);
+    },
+    [setTheme],
+  );
+
   return (
     <Container style={{ padding: '0.5rem' }} direction="column">
       <Container align="right">
@@ -201,7 +201,7 @@ function Setting({
         <Radio
           data={themeData}
           name="themes"
-          value={currentTheme}
+          value={theme}
           onChange={onClickTheme}
         />
       </Container>

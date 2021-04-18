@@ -70,6 +70,7 @@ function Dev1() {
               onSelectRow={onSelectRow}
               onMultiSelectRow={onMultiSelectRow}
               enableMultiSelectRow
+              enableTreeTable
             />
             <Table
               model={model}
@@ -95,7 +96,7 @@ const model1: TableModelProps[] = [
     label: '정산배치타입',
     name: 'batchConfTypeNm',
     width: 120,
-    align: 'center',
+    align: 'left',
   },
   {
     label: '정산배치설정ID',
@@ -169,6 +170,48 @@ export const data1 = [
     retryYnNm: '예',
     updt_user: '전혜수',
     updtdt: '2020-11-30 18:50:15',
+    subRows: [
+      {
+        batchConfId: 'subRows',
+        batchConfNm: '서브 로우즈',
+        batchConfType: 'RESL',
+        batchConfTypeNm: '서브Rows',
+        crt_user: 'ENC전혜수',
+        crtdt: '2020-11-30 18:50:15',
+        pPageId: 'zzzz',
+        pageId: '',
+        procCmd: '',
+        procOrder: '1',
+        procType: 'J',
+        procTypeNm: '자바',
+        remark1: '안녕하세요!',
+        retryYn: 'Y',
+        retryYnNm: '예',
+        updt_user: '전혜수',
+        updtdt: '2020-11-30 18:50:15',
+        subRows: [
+          {
+            batchConfId: 'subRows2',
+            batchConfNm: '서브 로우즈2',
+            batchConfType: 'RESL',
+            batchConfTypeNm: '서브Rows2',
+            crt_user: 'ENC전혜수',
+            crtdt: '2020-11-30 18:50:15',
+            pPageId: 'zzzz',
+            pageId: '',
+            procCmd: '',
+            procOrder: '1',
+            procType: 'J',
+            procTypeNm: '자바',
+            remark1: '안녕하세요!',
+            retryYn: 'Y',
+            retryYnNm: '예',
+            updt_user: '전혜수',
+            updtdt: '2020-11-30 18:50:15',
+          },
+        ],
+      },
+    ],
   },
   {
     batchConfId: 'ctUdrsStep',

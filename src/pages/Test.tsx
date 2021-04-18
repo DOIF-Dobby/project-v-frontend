@@ -1,3 +1,19 @@
+import {
+  Box,
+  Button,
+  Check,
+  Container,
+  Datepicker,
+  Icon,
+  Input,
+  MarkdownEditor,
+  MarkdownPreview,
+  Radio,
+  Select,
+  Tab,
+  Textarea,
+} from 'doif-react-kit';
+import marked from 'marked';
 import React, {
   ChangeEvent,
   SyntheticEvent,
@@ -5,27 +21,6 @@ import React, {
   useRef,
   useState,
 } from 'react';
-import {
-  Button,
-  theme,
-  GlobalStyle,
-  Icon,
-  Container,
-  Input,
-  Check,
-  Radio,
-  Select,
-  Tab,
-  Page,
-  Box,
-  Loading,
-  Datepicker,
-  Textarea,
-  MarkdownEditor,
-  MarkdownPreview,
-  SideMenu,
-} from 'doif-react-kit';
-import marked from 'marked';
 
 type TestProps = {};
 
