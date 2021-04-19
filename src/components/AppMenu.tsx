@@ -1,7 +1,9 @@
-import React from 'react';
+import React, { useCallback, useState } from 'react';
 import { SideMenu, MenuProps, CategoryProps } from 'doif-react-kit';
 import smallLogo from '../images/v-logo-small.png';
 import bigLogo from '../images/v-logo-big.png';
+import { useAccessToken } from '../hooks/useAccessToken';
+import axios from 'axios';
 
 const items: Array<CategoryProps | MenuProps> = [
   {
@@ -69,6 +71,29 @@ interface AppMenuProps {
 }
 
 function AppMenu({ isFold }: AppMenuProps) {
+  const [items, setItmes] = useState<Array<CategoryProps | MenuProps>>([]);
+
+  useAccessToken(
+    useCallback(() => {
+      axios.get('/api/pages/main').then((response) => {
+        const { content } = response.data;
+
+        const con = content.map((el: any) => {
+          return {
+            code: el.code,
+            name: el.name,
+            icon: el.icon,
+            childrenItems: el.childrenItems,
+          };
+        });
+
+        console.log(con);
+
+        setItmes(con);
+      });
+    }, []),
+  );
+
   return (
     <SideMenu
       smallLogo={<img src={smallLogo} alt="로고" />}

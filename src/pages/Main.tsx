@@ -1,8 +1,6 @@
-import axios from 'axios';
 import { Page } from 'doif-react-kit';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Route } from 'react-router';
-import { useSetRecoilState } from 'recoil';
 import styled from 'styled-components';
 import AppHeader from '../components/AppHeader';
 import AppMenu from '../components/AppMenu';
@@ -11,7 +9,6 @@ import Dev1 from './Dev1';
 import Dev2 from './Dev2';
 import Entp1 from './Entp1';
 import Entp2 from './Entp2';
-import { responseStatusState } from './Index';
 import Optr1 from './Optr1';
 import Test from './Test';
 
@@ -22,8 +19,6 @@ function Main() {
   const [paddingLeft, setPaddingLeft] = useState(() => {
     return window.innerWidth < 720 ? '3rem' : '15rem';
   });
-  const setResponseStatus = useSetRecoilState(responseStatusState);
-
   const windowSize = useWindowSize();
 
   useEffect(() => {
@@ -36,18 +31,6 @@ function Main() {
     setIsFold(() => isFold);
     setPaddingLeft(isFold ? '3rem' : '15rem');
   }, [windowSize]);
-
-  useEffect(() => {
-    axios
-      .get('/token/access-token')
-      .then((res) => {
-        axios.defaults.headers.common['Authorization'] =
-          res.headers.authorization;
-      })
-      .catch((err) => {
-        setResponseStatus(err.response.status);
-      });
-  }, []);
 
   const onClickHamburgerButton = useCallback(
     (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
