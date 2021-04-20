@@ -1,10 +1,10 @@
 import axios from 'axios';
 import { Loading } from 'doif-react-kit';
 import React, { useCallback } from 'react';
-import { useAccessToken } from '../hooks/useAccessToken';
+import useAccessToken from '../hooks/useAccessToken';
 
 function Dev2() {
-  const { isLoading } = useAccessToken(
+  const [isLoading] = useAccessToken(
     useCallback(() => {
       axios
         .get('/api/resources/menus', {

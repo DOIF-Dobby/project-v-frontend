@@ -25,7 +25,7 @@ function reducer(state: any, action: any) {
   }
 }
 
-export function useAccessToken(onSuccess?: Function) {
+export default function useAccessToken(onSuccess?: Function) {
   const setResponseStatus = useSetRecoilState(responseStatusState);
   const [state, dispatch] = useReducer(reducer, {
     loading: false,
@@ -53,5 +53,5 @@ export function useAccessToken(onSuccess?: Function) {
       });
   }, [onSuccess, setResponseStatus]);
 
-  return { isLoading: state.loading, error: state.error };
+  return [state.loading, state.error];
 }
