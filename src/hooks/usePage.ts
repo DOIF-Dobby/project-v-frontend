@@ -40,6 +40,7 @@ export default function usePage(url: string, onSuccess?: Function) {
     dispatch({ type: 'LOADING' });
     try {
       const response = await axios.get('/token/access-token');
+
       axios.defaults.headers.common['Authorization'] =
         response.headers.authorization;
 

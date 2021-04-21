@@ -1,4 +1,4 @@
-import { Page } from 'doif-react-kit';
+import { Box, Container, Page } from 'doif-react-kit';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Route } from 'react-router';
 import styled from 'styled-components';
@@ -54,8 +54,12 @@ function Main() {
 
       <PageContainer paddingLeft={paddingLeft}>
         <Page>
-          <Route path="/" component={Test} exact />
-          <Route path="/dev/menu" component={ResourceMenu} />
+          <Box>
+            <Container direction="column">
+              <Route path="/" component={Test} exact />
+              <Route path="/dev/menu" component={ResourceMenu} />
+            </Container>
+          </Box>
         </Page>
       </PageContainer>
     </>
