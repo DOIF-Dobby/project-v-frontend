@@ -5,12 +5,8 @@ import styled from 'styled-components';
 import AppHeader from '../components/AppHeader';
 import AppMenu from '../components/AppMenu';
 import { useWindowSize } from '../hooks/useWindowSize';
-import Dev1 from './Dev1';
-import Dev2 from './Dev2';
 import ResourceMenu from './developer/ResourceMenu';
-import Entp1 from './Entp1';
-import Entp2 from './Entp2';
-import Optr1 from './Optr1';
+import ResourcePage from './developer/ResourcePage';
 import Test from './Test';
 
 function Main() {
@@ -54,10 +50,11 @@ function Main() {
 
       <PageContainer paddingLeft={paddingLeft}>
         <Page>
-          <Box>
+          <Box style={{ minHeight: '860px' }}>
             <Container direction="column">
               <Route path="/" component={Test} exact />
               <Route path="/dev/menu" component={ResourceMenu} />
+              <Route path="/dev/page" component={ResourcePage} />
             </Container>
           </Box>
         </Page>

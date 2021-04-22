@@ -3,6 +3,7 @@ import React from 'react';
 
 export interface ButtonInfoProps {
   id: string;
+  disable?: boolean;
   onClick?: (e: React.MouseEvent<HTMLButtonElement>) => void;
 }
 
@@ -26,7 +27,12 @@ export default function useButtons(
         const icon = buttonInfo.icon ? <Icon icon={buttonInfo.icon} /> : null;
 
         return (
-          <Button variant="ghost" key={button.id} onClick={button.onClick}>
+          <Button
+            variant="ghost"
+            key={button.id}
+            onClick={button.onClick}
+            disabled={button.disable}
+          >
             {icon}
             {buttonInfo.name}
           </Button>

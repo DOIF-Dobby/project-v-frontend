@@ -1,16 +1,25 @@
 import axios from 'axios';
 import {
   Button,
+  CloseButton,
   Container,
+  Form,
   Icon,
+  InFormContainer,
+  LabelInput,
+  LabelSelect,
   Loading,
+  Modal,
+  Row,
+  SaveButton,
   Table,
   TableModelProps,
+  useChange,
 } from 'doif-react-kit';
-import React, { useMemo } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import useAsync from '../../hooks/useAsync';
-import usePage from '../../hooks/usePage';
 import useButtons, { ButtonInfoProps } from '../../hooks/useButtons';
+import usePage from '../../hooks/usePage';
 
 async function getMenus(url: string) {
   const response = await axios.get(url);
@@ -22,22 +31,41 @@ function ResourceMenu() {
   const [menuState, refetch]: any = useAsync(
     () => pageData && getMenus(pageData.buttonMap.BTN_RESOURCE_MENU_FIND.url),
     [pageData],
-    true,
   );
 
+  const [openModal, setOpenModal] = useState(false);
+  const [modBtnDisable, setModBtnDisable] = useState(true);
+  const [delBtnDisable, setDelBtnDisable] = useState(true);
+
+  const [menuForm, onChangeMenu, resetMenuForm] = useChange({
+    menuCode: '',
+    menuName: '',
+    menuDescription: '',
+    menuCategory: '',
+    menuUrl: '',
+    menuStatus: '',
+    menuIcon: '',
+    menuSort: '',
+  });
+
   const { data, loading } = menuState;
+  const {
+    menuCode,
+    menuName,
+    menuDescription,
+    menuCategory,
+    menuUrl,
+    menuStatus,
+    menuIcon,
+    menuSort,
+  } = menuForm;
 
   const model: TableModelProps[] = useMemo(
     () => [
       {
-        label: '',
-        name: 'resourceId',
-        hidden: true,
-      },
-      {
         label: '메뉴명',
         name: 'name',
-        width: 300,
+        width: 250,
         align: 'left',
       },
       {
@@ -80,35 +108,71 @@ function ResourceMenu() {
         name: 'typeName',
         width: 120,
       },
+      {
+        label: '정렬 순서',
+        name: 'sort',
+        width: 100,
+      },
+      {
+        label: '',
+        name: 'resourceId',
+        hidden: true,
+      },
     ],
     [],
   );
+
+  const onSelectRow = useCallback((id: string, rowValue: any) => {
+    if (rowValue.type === 'MENU') {
+      setModBtnDisable(false);
+      setDelBtnDisable(false);
+    } else {
+      setModBtnDisable(true);
+      setDelBtnDisable(true);
+    }
+  }, []);
+
+  const defaultValue = {
+    code: '',
+    name: '선택없음',
+  };
+
+  const enableStatusData = [
+    { code: 'ENABLE', name: '가능' },
+    { code: 'DISABLE', name: '불가능' },
+  ];
 
   const buttonInfos: ButtonInfoProps[] = [
     {
       id: 'BTN_RESOURCE_MENU_ADD',
       onClick: (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
-        alert('hhihi');
+        resetMenuForm();
+        setOpenModal(true);
       },
     },
     {
       id: 'BTN_RESOURCE_MENU_MODIFY',
+      disable: modBtnDisable,
     },
     {
       id: 'BTN_RESOURCE_MENU_DELETE',
+      disable: delBtnDisable,
     },
   ];
   const buttons = useButtons(pageData && pageData.buttonMap, buttonInfos);
 
-  // if (!pageData) {
-  //   return null;
-  // }
+  if (!pageData) {
+    return <Loading />;
+  }
 
   return (
     <>
       {(isLoading || loading) && <Loading />}
       <Container align="right">
-        <Button onClick={refetch}>조회</Button>
+        <Button onClick={refetch}>
+          <Icon icon="search" />
+          조회
+        </Button>
       </Container>
 
       <Table
@@ -118,7 +182,90 @@ function ResourceMenu() {
         enableTreeTable
         disableFilters
         data={data ? data.content : []}
+        onSelectRow={onSelectRow}
       />
+
+      <Modal visible={openModal} title="메뉴 등록">
+        <Form>
+          <Row>
+            <LabelInput
+              required
+              label="메뉴 코드"
+              value={menuCode}
+              onChange={onChangeMenu}
+              name="menuCode"
+            />
+          </Row>
+          <Row>
+            <LabelInput
+              required
+              label="메뉴명"
+              value={menuName}
+              onChange={onChangeMenu}
+              name="menuName"
+            />
+          </Row>
+          <Row>
+            <LabelInput
+              label="메뉴 설명"
+              value={menuDescription}
+              onChange={onChangeMenu}
+              name="menuDescription"
+            />
+          </Row>
+          <Row>
+            <LabelInput
+              required
+              label="메뉴 URL"
+              value={menuUrl}
+              onChange={onChangeMenu}
+              name="menuUrl"
+            />
+          </Row>
+          <Row>
+            <LabelInput
+              required
+              label="상위 카테고리"
+              value={menuCategory}
+              onChange={onChangeMenu}
+              name="menuCategory"
+            />
+          </Row>
+          <Row>
+            <LabelInput
+              required
+              label="메뉴 아이콘"
+              value={menuIcon}
+              onChange={onChangeMenu}
+              name="menuIcon"
+            />
+          </Row>
+          <Row>
+            <LabelInput
+              required
+              label="메뉴 정렬"
+              value={menuSort}
+              onChange={onChangeMenu}
+              name="menuSort"
+            />
+          </Row>
+          <Row>
+            <LabelSelect
+              required
+              label="사용 가능 상태"
+              data={enableStatusData}
+              defaultValue={defaultValue}
+              value={menuStatus}
+              onChange={onChangeMenu}
+              name="menuStatus"
+            />
+          </Row>
+          <InFormContainer>
+            <SaveButton />
+            <CloseButton onClick={() => setOpenModal(false)} />
+          </InFormContainer>
+        </Form>
+      </Modal>
     </>
   );
 }
