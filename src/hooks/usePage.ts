@@ -2,24 +2,17 @@ import axios from 'axios';
 import { useCallback, useEffect, useReducer } from 'react';
 import { useSetRecoilState } from 'recoil';
 import { responseStatusState } from '../pages/Index';
+import { loadingState } from '../pages/Main';
 
 function reducer(state: any, action: any) {
   switch (action.type) {
-    case 'LOADING':
-      return {
-        loading: true,
-        data: null,
-        error: null,
-      };
     case 'SUCCESS':
       return {
-        loading: false,
         data: action.data,
         error: null,
       };
     case 'ERROR':
       return {
-        loading: false,
         data: null,
         error: action.error,
       };
@@ -30,14 +23,14 @@ function reducer(state: any, action: any) {
 
 export default function usePage(url: string, onSuccess?: Function) {
   const setResponseStatus = useSetRecoilState(responseStatusState);
+  const setLoading = useSetRecoilState(loadingState);
   const [state, dispatch] = useReducer(reducer, {
-    loading: false,
     data: null,
     error: false,
   });
 
   const fetchPageData = useCallback(async () => {
-    dispatch({ type: 'LOADING' });
+    setLoading(true);
     try {
       const response = await axios.get('/token/access-token');
 
@@ -52,15 +45,17 @@ export default function usePage(url: string, onSuccess?: Function) {
       }
 
       dispatch({ type: 'SUCCESS', data: responsePageData.data });
+      setLoading(false);
     } catch (error) {
       setResponseStatus(error.response.status);
       dispatch({ type: 'ERROR', error });
+      setLoading(false);
     }
-  }, [url, onSuccess, setResponseStatus]);
+  }, [url, onSuccess, setResponseStatus, setLoading]);
 
   useEffect(() => {
     fetchPageData();
   }, [fetchPageData]);
 
-  return [state.loading, state.data, state.error];
+  return [state.data, state.error];
 }

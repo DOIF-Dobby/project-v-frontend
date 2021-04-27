@@ -2,6 +2,7 @@ import axios from 'axios';
 import { useEffect, useReducer } from 'react';
 import { useSetRecoilState } from 'recoil';
 import { responseStatusState } from '../pages/Index';
+import { loadingState } from '../pages/Main';
 
 function reducer(state: any, action: any) {
   switch (action.type) {
@@ -27,6 +28,7 @@ function reducer(state: any, action: any) {
 
 export default function useAccessToken(onSuccess?: Function) {
   const setResponseStatus = useSetRecoilState(responseStatusState);
+  const setLoading = useSetRecoilState(loadingState);
   const [state, dispatch] = useReducer(reducer, {
     loading: false,
     error: false,
@@ -34,6 +36,7 @@ export default function useAccessToken(onSuccess?: Function) {
 
   useEffect(() => {
     dispatch({ type: 'LOADING' });
+    setLoading(true);
 
     axios
       .get('/token/access-token')
@@ -42,6 +45,7 @@ export default function useAccessToken(onSuccess?: Function) {
           response.headers.authorization;
 
         dispatch({ type: 'SUCCESS' });
+        setLoading(false);
 
         if (onSuccess) {
           onSuccess();
@@ -50,8 +54,9 @@ export default function useAccessToken(onSuccess?: Function) {
       .catch((error) => {
         setResponseStatus(error.response.status);
         dispatch({ type: 'ERROR', error });
+        setLoading(false);
       });
-  }, [onSuccess, setResponseStatus]);
+  }, [onSuccess, setResponseStatus, setLoading]);
 
   return [state.loading, state.error];
 }

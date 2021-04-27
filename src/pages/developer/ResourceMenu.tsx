@@ -5,6 +5,7 @@ import {
   Container,
   Form,
   Icon,
+  iconTypes,
   InFormContainer,
   LabelInput,
   LabelSelect,
@@ -16,24 +17,31 @@ import {
   TableModelProps,
   useChange,
 } from 'doif-react-kit';
-import React, { useCallback, useMemo, useState } from 'react';
+import React, { FormEvent, useCallback, useMemo, useState } from 'react';
 import useAsync from '../../hooks/useAsync';
 import useButtons, { ButtonInfoProps } from '../../hooks/useButtons';
+import useCodes from '../../hooks/useCodes';
 import usePage from '../../hooks/usePage';
 
-async function getMenus(url: string) {
+async function getDatas(url: string) {
   const response = await axios.get(url);
   return response.data;
 }
 
 function ResourceMenu() {
-  const [isLoading, pageData] = usePage('/api/pages/resources/menu');
-  const [menuState, refetch]: any = useAsync(
-    () => pageData && getMenus(pageData.buttonMap.BTN_RESOURCE_MENU_FIND.url),
+  const [pageData] = usePage('/api/pages/resources/menu');
+  const [menuState, getMenus]: any = useAsync(
+    () => pageData && getDatas(pageData.buttonMap.BTN_RESOURCE_MENU_FIND.url),
+    [pageData],
+  );
+  const [enableCodes]: any = useCodes('ENABLE_STATUS', pageData);
+  const [hierarchyCategories]: any = useAsync(
+    () => pageData && getDatas('/api/resources/menu-categories/hierarchy-code'),
     [pageData],
   );
 
-  const [openModal, setOpenModal] = useState(false);
+  const [openMenuModal, setOpenMenuModal] = useState(false);
+  const [openCategoryModal, setOpenCategoryModal] = useState(false);
   const [modBtnDisable, setModBtnDisable] = useState(true);
   const [delBtnDisable, setDelBtnDisable] = useState(true);
 
@@ -48,7 +56,27 @@ function ResourceMenu() {
     menuSort: '',
   });
 
-  const { data, loading } = menuState;
+  const [categoryForm, onChangeCategory, resetCategoryForm] = useChange({
+    categoryCode: '',
+    categoryName: '',
+    categoryDescription: '',
+    categoryParent: '',
+    categoryStatus: '',
+    categoryIcon: '',
+    categorySort: '',
+  });
+
+  const { data } = menuState;
+  const hierarchyCategoriesData = hierarchyCategories.data?.map(
+    ({ code, name, render }: any) => ({
+      code,
+      name,
+      render: (
+        <div style={{ paddingLeft: (render - 1) * 10 + 'px' }}>{name}</div>
+      ),
+    }),
+  );
+
   const {
     menuCode,
     menuName,
@@ -59,6 +87,16 @@ function ResourceMenu() {
     menuIcon,
     menuSort,
   } = menuForm;
+
+  const {
+    categoryCode,
+    categoryName,
+    categoryDescription,
+    categoryParent,
+    categoryStatus,
+    categoryIcon,
+    categorySort,
+  } = categoryForm;
 
   const model: TableModelProps[] = useMemo(
     () => [
@@ -132,22 +170,66 @@ function ResourceMenu() {
     }
   }, []);
 
+  const onSaveCategory = (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    const params = {
+      name: categoryName,
+      description: categoryDescription,
+      status: categoryStatus,
+      code: categoryCode,
+      parentId: categoryParent,
+      sort: categorySort,
+      icon: categoryIcon,
+    };
+
+    axios
+      .post('/api/resources/menu-categories', params)
+      .then((response) => console.log(response));
+  };
+
+  const onSaveMenu = (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    const params = {
+      name: menuName,
+      description: menuDescription,
+      status: menuStatus,
+      code: menuCode,
+      menuCategoryId: menuCategory,
+      url: menuUrl,
+      icon: menuIcon,
+      sort: menuSort,
+    };
+
+    axios.post('/api/resources/menus', params).then((response) => {
+      setOpenMenuModal(false);
+      getMenus();
+    });
+  };
+
   const defaultValue = {
     code: '',
     name: '선택없음',
   };
 
-  const enableStatusData = [
-    { code: 'ENABLE', name: '가능' },
-    { code: 'DISABLE', name: '불가능' },
-  ];
+  const iconCodes = iconTypes.map((icon) => ({
+    code: icon,
+    name: icon,
+    render: (
+      <Container>
+        <Icon icon={icon} />
+        <div>{icon}</div>
+      </Container>
+    ),
+  }));
 
   const buttonInfos: ButtonInfoProps[] = [
     {
       id: 'BTN_RESOURCE_MENU_ADD',
       onClick: (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
         resetMenuForm();
-        setOpenModal(true);
+        setOpenMenuModal(true);
       },
     },
     {
@@ -158,6 +240,13 @@ function ResourceMenu() {
       id: 'BTN_RESOURCE_MENU_DELETE',
       disable: delBtnDisable,
     },
+    {
+      id: 'BTN_RESOURCE_MENU_CATEGORY_ADD',
+      onClick: (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
+        resetCategoryForm();
+        setOpenCategoryModal(true);
+      },
+    },
   ];
   const buttons = useButtons(pageData && pageData.buttonMap, buttonInfos);
 
@@ -165,11 +254,12 @@ function ResourceMenu() {
     return <Loading />;
   }
 
+  // console.log(pageData);
+
   return (
     <>
-      {(isLoading || loading) && <Loading />}
       <Container align="right">
-        <Button onClick={refetch}>
+        <Button onClick={getMenus}>
           <Icon icon="search" />
           조회
         </Button>
@@ -181,12 +271,13 @@ function ResourceMenu() {
         buttons={buttons}
         enableTreeTable
         disableFilters
+        disableSortBy
         data={data ? data.content : []}
         onSelectRow={onSelectRow}
       />
 
-      <Modal visible={openModal} title="메뉴 등록">
-        <Form>
+      <Modal visible={openMenuModal} title="메뉴 등록/수정">
+        <Form onSubmit={onSaveMenu}>
           <Row>
             <LabelInput
               required
@@ -223,18 +314,21 @@ function ResourceMenu() {
             />
           </Row>
           <Row>
-            <LabelInput
+            <LabelSelect
               required
               label="상위 카테고리"
+              data={hierarchyCategoriesData}
+              defaultValue={{ code: '', name: '최상위 카테고리' }}
               value={menuCategory}
               onChange={onChangeMenu}
               name="menuCategory"
             />
           </Row>
           <Row>
-            <LabelInput
-              required
+            <LabelSelect
               label="메뉴 아이콘"
+              defaultValue={defaultValue}
+              data={iconCodes}
               value={menuIcon}
               onChange={onChangeMenu}
               name="menuIcon"
@@ -253,7 +347,7 @@ function ResourceMenu() {
             <LabelSelect
               required
               label="사용 가능 상태"
-              data={enableStatusData}
+              data={enableCodes}
               defaultValue={defaultValue}
               value={menuStatus}
               onChange={onChangeMenu}
@@ -262,7 +356,83 @@ function ResourceMenu() {
           </Row>
           <InFormContainer>
             <SaveButton />
-            <CloseButton onClick={() => setOpenModal(false)} />
+            <CloseButton onClick={() => setOpenMenuModal(false)} />
+          </InFormContainer>
+        </Form>
+      </Modal>
+
+      <Modal visible={openCategoryModal} title="카테고리 등록/수정">
+        <Form onSubmit={onSaveCategory}>
+          <Row>
+            <LabelInput
+              required
+              label="카테고리 코드"
+              value={categoryCode}
+              onChange={onChangeCategory}
+              name="categoryCode"
+            />
+          </Row>
+          <Row>
+            <LabelInput
+              required
+              label="카테고리명"
+              value={categoryName}
+              onChange={onChangeCategory}
+              name="categoryName"
+            />
+          </Row>
+          <Row>
+            <LabelInput
+              label="카테고리 설명"
+              value={categoryDescription}
+              onChange={onChangeCategory}
+              name="categoryDescription"
+            />
+          </Row>
+          <Row>
+            <LabelSelect
+              required
+              label="상위 카테고리"
+              data={hierarchyCategoriesData}
+              defaultValue={{ code: '', name: '최상위 카테고리' }}
+              value={categoryParent}
+              onChange={onChangeCategory}
+              name="categoryParent"
+            />
+          </Row>
+          <Row>
+            <LabelSelect
+              label="카테고리 아이콘"
+              defaultValue={defaultValue}
+              data={iconCodes}
+              value={categoryIcon}
+              onChange={onChangeCategory}
+              name="categoryIcon"
+            />
+          </Row>
+          <Row>
+            <LabelInput
+              required
+              label="카테고리 정렬"
+              value={categorySort}
+              onChange={onChangeCategory}
+              name="categorySort"
+            />
+          </Row>
+          <Row>
+            <LabelSelect
+              required
+              label="사용 가능 상태"
+              data={enableCodes}
+              defaultValue={defaultValue}
+              value={categoryStatus}
+              onChange={onChangeCategory}
+              name="categoryStatus"
+            />
+          </Row>
+          <InFormContainer>
+            <SaveButton />
+            <CloseButton onClick={() => setOpenCategoryModal(false)} />
           </InFormContainer>
         </Form>
       </Modal>
