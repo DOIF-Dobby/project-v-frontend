@@ -2,7 +2,7 @@ import axios from 'axios';
 import { useCallback, useEffect, useReducer } from 'react';
 import { useSetRecoilState } from 'recoil';
 import { responseStatusState } from '../pages/Index';
-import { loadingState } from '../pages/Main';
+import { loadingState } from '../components/LoadingAndDialog';
 
 function reducer(state: any, action: any) {
   switch (action.type) {

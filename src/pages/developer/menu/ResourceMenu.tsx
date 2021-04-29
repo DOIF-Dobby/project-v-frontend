@@ -3,6 +3,7 @@ import {
   Button,
   CloseButton,
   Container,
+  Dialog,
   Form,
   Icon,
   iconTypes,
@@ -17,35 +18,105 @@ import {
   TableModelProps,
   useChange,
 } from 'doif-react-kit';
-import React, { FormEvent, useCallback, useMemo, useState } from 'react';
-import useAsync from '../../hooks/useAsync';
-import useButtons, { ButtonInfoProps } from '../../hooks/useButtons';
-import useCodes from '../../hooks/useCodes';
-import usePage from '../../hooks/usePage';
-
-async function getDatas(url: string) {
-  const response = await axios.get(url);
-  return response.data;
-}
+import React, {
+  FormEvent,
+  useCallback,
+  useMemo,
+  useRef,
+  useState,
+} from 'react';
+import useAsyncAction, {
+  deleteAction,
+  postAction,
+  putAction,
+} from '../../../hooks/useAsyncAction';
+import useAsyncGet, { getAction } from '../../../hooks/useAsyncGet';
+import useButtons, { ButtonInfoProps } from '../../../hooks/useButtons';
+import useCodes from '../../../hooks/useCodes';
+import usePage from '../../../hooks/usePage';
 
 function ResourceMenu() {
   const [pageData] = usePage('/api/pages/resources/menu');
-  const [menuState, getMenus]: any = useAsync(
-    () => pageData && getDatas(pageData.buttonMap.BTN_RESOURCE_MENU_FIND.url),
+  const [menus, getMenus]: any = useAsyncGet(
+    () => pageData && getAction(pageData.buttonMap.BTN_RESOURCE_MENU_FIND.url),
     [pageData],
   );
   const [enableCodes]: any = useCodes('ENABLE_STATUS', pageData);
-  const [hierarchyCategories]: any = useAsync(
-    () => pageData && getDatas('/api/resources/menu-categories/hierarchy-code'),
+  const [hierarchyCategories]: any = useAsyncGet(
+    () =>
+      pageData && getAction('/api/resources/menu-categories/hierarchy-code'),
     [pageData],
+  );
+
+  let selectedRowRef: any = useRef(null);
+  let buttonTypeRef = useRef('');
+
+  const [postMenu] = useAsyncAction(
+    () =>
+      postAction(pageData.buttonMap.BTN_RESOURCE_MENU_ADD.url, {
+        name: menuName,
+        description: menuDescription,
+        status: menuStatus,
+        code: menuCode,
+        menuCategoryId: menuCategory,
+        url: menuUrl,
+        icon: menuIcon,
+        sort: menuSort,
+      }),
+    {
+      onSuccess: () => {
+        setOpenMenuModal(false);
+        getMenus();
+      },
+    },
+  );
+
+  const [putMenu] = useAsyncAction(
+    () =>
+      putAction('/api/resources/menus/' + selectedRowRef.current?.resourceId, {
+        name: menuName,
+        description: menuDescription,
+        status: menuStatus,
+        code: menuCode,
+        menuCategoryId: menuCategory,
+        url: menuUrl,
+        icon: menuIcon,
+        sort: menuSort,
+      }),
+    {
+      onSuccess: () => {
+        setOpenMenuModal(false);
+        getMenus();
+      },
+    },
+  );
+
+  const [deleteMenu] = useAsyncAction(
+    () =>
+      deleteAction(
+        '/api/resources/menus/' + selectedRowRef.current?.resourceId,
+      ),
+    {
+      onSuccess: () => {
+        setDeleteMenuDialog(false);
+        getMenus();
+      },
+    },
   );
 
   const [openMenuModal, setOpenMenuModal] = useState(false);
   const [openCategoryModal, setOpenCategoryModal] = useState(false);
   const [modBtnDisable, setModBtnDisable] = useState(true);
   const [delBtnDisable, setDelBtnDisable] = useState(true);
+  const [deleteMenuDialog, setDeleteMenuDialog] = useState(false);
+  const [menuItemDisable, setMenuItemDisable] = useState(false);
 
-  const [menuForm, onChangeMenu, resetMenuForm] = useChange({
+  const [
+    menuForm,
+    onChangeMenuForm,
+    replaceMenuForm,
+    resetMenuForm,
+  ] = useChange({
     menuCode: '',
     menuName: '',
     menuDescription: '',
@@ -56,7 +127,12 @@ function ResourceMenu() {
     menuSort: '',
   });
 
-  const [categoryForm, onChangeCategory, resetCategoryForm] = useChange({
+  const [
+    categoryForm,
+    onChangeCategoryForm,
+    replaceCategoryForm,
+    resetCategoryForm,
+  ] = useChange({
     categoryCode: '',
     categoryName: '',
     categoryDescription: '',
@@ -66,8 +142,7 @@ function ResourceMenu() {
     categorySort: '',
   });
 
-  const { data } = menuState;
-  const hierarchyCategoriesData = hierarchyCategories.data?.map(
+  const hierarchyCategoriesData = hierarchyCategories?.map(
     ({ code, name, render }: any) => ({
       code,
       name,
@@ -161,6 +236,7 @@ function ResourceMenu() {
   );
 
   const onSelectRow = useCallback((id: string, rowValue: any) => {
+    selectedRowRef.current = rowValue;
     if (rowValue.type === 'MENU') {
       setModBtnDisable(false);
       setDelBtnDisable(false);
@@ -191,21 +267,11 @@ function ResourceMenu() {
   const onSaveMenu = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    const params = {
-      name: menuName,
-      description: menuDescription,
-      status: menuStatus,
-      code: menuCode,
-      menuCategoryId: menuCategory,
-      url: menuUrl,
-      icon: menuIcon,
-      sort: menuSort,
-    };
-
-    axios.post('/api/resources/menus', params).then((response) => {
-      setOpenMenuModal(false);
-      getMenus();
-    });
+    if (buttonTypeRef.current === 'post') {
+      postMenu();
+    } else if (buttonTypeRef.current === 'put') {
+      putMenu();
+    }
   };
 
   const defaultValue = {
@@ -228,6 +294,8 @@ function ResourceMenu() {
     {
       id: 'BTN_RESOURCE_MENU_ADD',
       onClick: (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
+        setMenuItemDisable(false);
+        buttonTypeRef.current = 'post';
         resetMenuForm();
         setOpenMenuModal(true);
       },
@@ -235,10 +303,29 @@ function ResourceMenu() {
     {
       id: 'BTN_RESOURCE_MENU_MODIFY',
       disable: modBtnDisable,
+      onClick: (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
+        setMenuItemDisable(true);
+        buttonTypeRef.current = 'put';
+        const row = selectedRowRef.current;
+        replaceMenuForm({
+          menuCode: row.code,
+          menuName: row.name,
+          menuDescription: row.description,
+          menuCategory: String(row.parentId),
+          menuUrl: row.url,
+          menuStatus: row.status,
+          menuIcon: row.icon,
+          menuSort: row.sort,
+        });
+        setOpenMenuModal(true);
+      },
     },
     {
       id: 'BTN_RESOURCE_MENU_DELETE',
       disable: delBtnDisable,
+      onClick: (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
+        setDeleteMenuDialog(true);
+      },
     },
     {
       id: 'BTN_RESOURCE_MENU_CATEGORY_ADD',
@@ -258,6 +345,16 @@ function ResourceMenu() {
 
   return (
     <>
+      <Dialog
+        visible={deleteMenuDialog}
+        type="info"
+        isConfirm
+        onConfirm={deleteMenu}
+        onCancel={() => setDeleteMenuDialog(false)}
+      >
+        정말 삭제하시겠습니까?
+      </Dialog>
+
       <Container align="right">
         <Button onClick={getMenus}>
           <Icon icon="search" />
@@ -272,7 +369,7 @@ function ResourceMenu() {
         enableTreeTable
         disableFilters
         disableSortBy
-        data={data ? data.content : []}
+        data={menus ? menus.content : []}
         onSelectRow={onSelectRow}
       />
 
@@ -283,8 +380,9 @@ function ResourceMenu() {
               required
               label="메뉴 코드"
               value={menuCode}
-              onChange={onChangeMenu}
+              onChange={onChangeMenuForm}
               name="menuCode"
+              disabled={menuItemDisable}
             />
           </Row>
           <Row>
@@ -292,7 +390,7 @@ function ResourceMenu() {
               required
               label="메뉴명"
               value={menuName}
-              onChange={onChangeMenu}
+              onChange={onChangeMenuForm}
               name="menuName"
             />
           </Row>
@@ -300,7 +398,7 @@ function ResourceMenu() {
             <LabelInput
               label="메뉴 설명"
               value={menuDescription}
-              onChange={onChangeMenu}
+              onChange={onChangeMenuForm}
               name="menuDescription"
             />
           </Row>
@@ -309,7 +407,7 @@ function ResourceMenu() {
               required
               label="메뉴 URL"
               value={menuUrl}
-              onChange={onChangeMenu}
+              onChange={onChangeMenuForm}
               name="menuUrl"
             />
           </Row>
@@ -320,8 +418,9 @@ function ResourceMenu() {
               data={hierarchyCategoriesData}
               defaultValue={{ code: '', name: '최상위 카테고리' }}
               value={menuCategory}
-              onChange={onChangeMenu}
+              onChange={onChangeMenuForm}
               name="menuCategory"
+              disabled={menuItemDisable}
             />
           </Row>
           <Row>
@@ -330,7 +429,7 @@ function ResourceMenu() {
               defaultValue={defaultValue}
               data={iconCodes}
               value={menuIcon}
-              onChange={onChangeMenu}
+              onChange={onChangeMenuForm}
               name="menuIcon"
             />
           </Row>
@@ -339,7 +438,7 @@ function ResourceMenu() {
               required
               label="메뉴 정렬"
               value={menuSort}
-              onChange={onChangeMenu}
+              onChange={onChangeMenuForm}
               name="menuSort"
             />
           </Row>
@@ -350,7 +449,7 @@ function ResourceMenu() {
               data={enableCodes}
               defaultValue={defaultValue}
               value={menuStatus}
-              onChange={onChangeMenu}
+              onChange={onChangeMenuForm}
               name="menuStatus"
             />
           </Row>
@@ -368,7 +467,7 @@ function ResourceMenu() {
               required
               label="카테고리 코드"
               value={categoryCode}
-              onChange={onChangeCategory}
+              onChange={onChangeCategoryForm}
               name="categoryCode"
             />
           </Row>
@@ -377,7 +476,7 @@ function ResourceMenu() {
               required
               label="카테고리명"
               value={categoryName}
-              onChange={onChangeCategory}
+              onChange={onChangeCategoryForm}
               name="categoryName"
             />
           </Row>
@@ -385,7 +484,7 @@ function ResourceMenu() {
             <LabelInput
               label="카테고리 설명"
               value={categoryDescription}
-              onChange={onChangeCategory}
+              onChange={onChangeCategoryForm}
               name="categoryDescription"
             />
           </Row>
@@ -396,7 +495,7 @@ function ResourceMenu() {
               data={hierarchyCategoriesData}
               defaultValue={{ code: '', name: '최상위 카테고리' }}
               value={categoryParent}
-              onChange={onChangeCategory}
+              onChange={onChangeCategoryForm}
               name="categoryParent"
             />
           </Row>
@@ -406,7 +505,7 @@ function ResourceMenu() {
               defaultValue={defaultValue}
               data={iconCodes}
               value={categoryIcon}
-              onChange={onChangeCategory}
+              onChange={onChangeCategoryForm}
               name="categoryIcon"
             />
           </Row>
@@ -415,7 +514,7 @@ function ResourceMenu() {
               required
               label="카테고리 정렬"
               value={categorySort}
-              onChange={onChangeCategory}
+              onChange={onChangeCategoryForm}
               name="categorySort"
             />
           </Row>
@@ -426,7 +525,7 @@ function ResourceMenu() {
               data={enableCodes}
               defaultValue={defaultValue}
               value={categoryStatus}
-              onChange={onChangeCategory}
+              onChange={onChangeCategoryForm}
               name="categoryStatus"
             />
           </Row>

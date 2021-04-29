@@ -1,34 +1,14 @@
-import { Box, Container, Dialog, Loading, Page } from 'doif-react-kit';
+import { Box, Container, Page } from 'doif-react-kit';
 import React, { useCallback, useEffect, useState } from 'react';
 import { Route } from 'react-router';
-import { atom, useRecoilState, useRecoilValue } from 'recoil';
 import styled from 'styled-components';
 import AppHeader from '../components/AppHeader';
 import AppMenu from '../components/AppMenu';
+import LoadingAndDialog from '../components/LoadingAndDialog';
 import { useWindowSize } from '../hooks/useWindowSize';
-import ResourceMenu from './developer/ResourceMenu';
-import ResourcePage from './developer/ResourcePage';
+import ResourceMenu from './developer/menu/ResourceMenu';
+import ResourcePage from './developer/page/ResourcePage';
 import Test from './Test';
-
-export const loadingState = atom({
-  key: 'loadingState',
-  default: false,
-});
-
-export type DialogProps = {
-  visible: boolean;
-  type?: 'success' | 'warning' | 'error' | 'info';
-  content: React.ReactNode;
-};
-
-export const dialogState = atom<DialogProps>({
-  key: 'dialogState',
-  default: {
-    visible: false,
-    type: 'info',
-    content: '',
-  },
-});
 
 function Main() {
   const [isFold, setIsFold] = useState(() => {
@@ -38,8 +18,6 @@ function Main() {
     return window.innerWidth < 720 ? '3rem' : '15rem';
   });
   const windowSize = useWindowSize();
-  const loading = useRecoilValue(loadingState);
-  const [dialog, setDialog] = useRecoilState(dialogState);
 
   useEffect(() => {
     const isFold = windowSize.width
@@ -59,11 +37,6 @@ function Main() {
     [],
   );
 
-  const onCloseDialog = useCallback(
-    () => setDialog((data) => ({ ...data, visible: false })),
-    [setDialog],
-  );
-
   useEffect(() => {
     setPaddingLeft(isFold ? '3rem' : '15rem');
   }, [isFold]);
@@ -80,14 +53,7 @@ function Main() {
         <Page>
           <Box style={{ minHeight: '860px' }}>
             <Container direction="column">
-              {loading && <Loading />}
-              <Dialog
-                visible={dialog.visible}
-                type={dialog.type}
-                onConfirm={onCloseDialog}
-              >
-                {dialog.content}
-              </Dialog>
+              <LoadingAndDialog />
               <Route path="/" component={Test} exact />
               <Route path="/dev/menu" component={ResourceMenu} />
               <Route path="/dev/page" component={ResourcePage} />
