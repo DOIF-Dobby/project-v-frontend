@@ -18,13 +18,7 @@ import {
   TableModelProps,
   useChange,
 } from 'doif-react-kit';
-import React, {
-  FormEvent,
-  useCallback,
-  useMemo,
-  useRef,
-  useState,
-} from 'react';
+import React, { FormEvent, useCallback, useMemo, useState } from 'react';
 import useAsyncAction, {
   deleteAction,
   postAction,
@@ -34,6 +28,9 @@ import useAsyncGet, { getAction } from '../../../hooks/useAsyncGet';
 import useButtons, { ButtonInfoProps } from '../../../hooks/useButtons';
 import useCodes from '../../../hooks/useCodes';
 import usePage from '../../../hooks/usePage';
+
+let row: any = {};
+let buttonType: string = '';
 
 function ResourceMenu() {
   const [pageData] = usePage('/api/pages/resources/menu');
@@ -47,9 +44,6 @@ function ResourceMenu() {
       pageData && getAction('/api/resources/menu-categories/hierarchy-code'),
     [pageData],
   );
-
-  let selectedRowRef: any = useRef(null);
-  let buttonTypeRef = useRef('');
 
   const [postMenu] = useAsyncAction(
     () =>
@@ -73,7 +67,7 @@ function ResourceMenu() {
 
   const [putMenu] = useAsyncAction(
     () =>
-      putAction('/api/resources/menus/' + selectedRowRef.current?.resourceId, {
+      putAction('/api/resources/menus/' + row.resourceId, {
         name: menuName,
         description: menuDescription,
         status: menuStatus,
@@ -92,10 +86,7 @@ function ResourceMenu() {
   );
 
   const [deleteMenu] = useAsyncAction(
-    () =>
-      deleteAction(
-        '/api/resources/menus/' + selectedRowRef.current?.resourceId,
-      ),
+    () => deleteAction('/api/resources/menus/' + row.resourceId),
     {
       onSuccess: () => {
         setDeleteMenuDialog(false);
@@ -236,7 +227,7 @@ function ResourceMenu() {
   );
 
   const onSelectRow = useCallback((id: string, rowValue: any) => {
-    selectedRowRef.current = rowValue;
+    row = rowValue;
     if (rowValue.type === 'MENU') {
       setModBtnDisable(false);
       setDelBtnDisable(false);
@@ -267,9 +258,9 @@ function ResourceMenu() {
   const onSaveMenu = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    if (buttonTypeRef.current === 'post') {
+    if (buttonType === 'post') {
       postMenu();
-    } else if (buttonTypeRef.current === 'put') {
+    } else if (buttonType === 'put') {
       putMenu();
     }
   };
@@ -295,7 +286,8 @@ function ResourceMenu() {
       id: 'BTN_RESOURCE_MENU_ADD',
       onClick: (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
         setMenuItemDisable(false);
-        buttonTypeRef.current = 'post';
+        buttonType = 'post';
+
         resetMenuForm();
         setOpenMenuModal(true);
       },
@@ -305,8 +297,8 @@ function ResourceMenu() {
       disable: modBtnDisable,
       onClick: (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
         setMenuItemDisable(true);
-        buttonTypeRef.current = 'put';
-        const row = selectedRowRef.current;
+        buttonType = 'put';
+
         replaceMenuForm({
           menuCode: row.code,
           menuName: row.name,
