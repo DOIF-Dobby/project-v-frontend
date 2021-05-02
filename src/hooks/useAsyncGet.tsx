@@ -43,11 +43,27 @@ function reducer(state: any, action: any) {
   }
 }
 
-function useAsyncGet(callback: Function, deps: Array<any> = [], skip = false) {
+export type AsyncGetActionType = {
+  skip: boolean;
+  /** 비동기 요청 성공 시 콜백 */
+  onSuccess?: (data: any) => void;
+  /** 비동기 요청 실패 시 콜백 */
+  onError?: (data: any) => void;
+};
+
+function useAsyncGetAction(
+  callback: Function,
+  deps: Array<any> = [],
+  options: AsyncGetActionType = { skip: false },
+) {
   const [state, dispatch] = useReducer(reducer, {
     data: null,
     error: null,
   });
+
+  const skip = options.skip;
+  const onSuccess = options.onSuccess;
+  const onError = options.onError;
 
   const { data } = state;
 
@@ -60,9 +76,17 @@ function useAsyncGet(callback: Function, deps: Array<any> = [], skip = false) {
       const data = await callback();
       dispatch({ type: 'SUCCESS', data });
       setLoading(false);
+
+      if (onSuccess) {
+        onSuccess(data);
+      }
     } catch (error) {
       dispatch({ type: 'ERROR', error });
       setLoading(false);
+
+      if (onError) {
+        onError(error.response);
+      }
 
       setDialog(() => ({
         visible: true,
@@ -88,4 +112,4 @@ function useAsyncGet(callback: Function, deps: Array<any> = [], skip = false) {
   return [data, fetchData];
 }
 
-export default useAsyncGet;
+export default useAsyncGetAction;

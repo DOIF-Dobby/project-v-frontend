@@ -99,6 +99,7 @@ function useAsyncAction(callback: Function, options?: AsyncActionTypes) {
   });
 
   const onSuccess = options?.onSuccess;
+  const onError = options?.onError;
 
   const { data } = state;
 
@@ -124,6 +125,10 @@ function useAsyncAction(callback: Function, options?: AsyncActionTypes) {
     } catch (error) {
       dispatch({ type: 'ERROR', error });
       setLoading(false);
+
+      if (onError) {
+        onError(error.response);
+      }
 
       setDialog(() => ({
         visible: true,

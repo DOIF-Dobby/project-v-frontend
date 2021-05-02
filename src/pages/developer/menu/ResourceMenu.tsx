@@ -1,4 +1,3 @@
-import axios from 'axios';
 import {
   Button,
   CloseButton,
@@ -19,89 +18,57 @@ import {
   useChange,
 } from 'doif-react-kit';
 import React, { FormEvent, useCallback, useMemo, useState } from 'react';
+import { defaultValue } from '../../../common/commonValue';
 import useAsyncAction, {
   deleteAction,
   postAction,
   putAction,
 } from '../../../hooks/useAsyncAction';
-import useAsyncGet, { getAction } from '../../../hooks/useAsyncGet';
+import useAsyncGetAction, { getAction } from '../../../hooks/useAsyncGet';
 import useButtons, { ButtonInfoProps } from '../../../hooks/useButtons';
 import useCodes from '../../../hooks/useCodes';
 import usePage from '../../../hooks/usePage';
 
+// table row data
 let row: any = {};
+// button 클릭시 등록/수정 타입
 let buttonType: string = '';
 
+// 메뉴 자원 페이지
 function ResourceMenu() {
+  /******************************************************************
+   * 기본 데이터 및 state
+   *******************************************************************/
+  // 페이지 데이터 조회
   const [pageData] = usePage('/api/pages/resources/menu');
-  const [menus, getMenus]: any = useAsyncGet(
-    () => pageData && getAction(pageData.buttonMap.BTN_RESOURCE_MENU_FIND.url),
-    [pageData],
-  );
+  // 코드 조회
   const [enableCodes]: any = useCodes('ENABLE_STATUS', pageData);
-  const [hierarchyCategories]: any = useAsyncGet(
+  // 상위 카테고리 조회
+  const [
+    hierarchyCategories,
+    getHierarchyCategories,
+  ]: any = useAsyncGetAction(
     () =>
       pageData && getAction('/api/resources/menu-categories/hierarchy-code'),
     [pageData],
   );
 
-  const [postMenu] = useAsyncAction(
-    () =>
-      postAction(pageData.buttonMap.BTN_RESOURCE_MENU_ADD.url, {
-        name: menuName,
-        description: menuDescription,
-        status: menuStatus,
-        code: menuCode,
-        menuCategoryId: menuCategory,
-        url: menuUrl,
-        icon: menuIcon,
-        sort: menuSort,
-      }),
-    {
-      onSuccess: () => {
-        setOpenMenuModal(false);
-        getMenus();
-      },
-    },
-  );
+  // 초기 페이지 상태
+  const initPageState = {
+    openMenuModal: false,
+    openCategoryModal: false,
+    disableMenuButton: true,
+    disableCategoryButton: true,
+    openDeleteMenuDialog: false,
+    openDeleteCategoryDialog: false,
+    disableMenuItem: false,
+    disableCategoryItem: false,
+  };
 
-  const [putMenu] = useAsyncAction(
-    () =>
-      putAction('/api/resources/menus/' + row.resourceId, {
-        name: menuName,
-        description: menuDescription,
-        status: menuStatus,
-        code: menuCode,
-        menuCategoryId: menuCategory,
-        url: menuUrl,
-        icon: menuIcon,
-        sort: menuSort,
-      }),
-    {
-      onSuccess: () => {
-        setOpenMenuModal(false);
-        getMenus();
-      },
-    },
-  );
+  // 페이지 상태
+  const [pageState, setPageState] = useState(initPageState);
 
-  const [deleteMenu] = useAsyncAction(
-    () => deleteAction('/api/resources/menus/' + row.resourceId),
-    {
-      onSuccess: () => {
-        setDeleteMenuDialog(false);
-        getMenus();
-      },
-    },
-  );
-
-  const [openMenuModal, setOpenMenuModal] = useState(false);
-  const [openCategoryModal, setOpenCategoryModal] = useState(false);
-  const [modBtnDisable, setModBtnDisable] = useState(true);
-  const [delBtnDisable, setDelBtnDisable] = useState(true);
-  const [deleteMenuDialog, setDeleteMenuDialog] = useState(false);
-  const [menuItemDisable, setMenuItemDisable] = useState(false);
-
+  // menu form 데이터
   const [
     menuForm,
     onChangeMenuForm,
@@ -118,6 +85,18 @@ function ResourceMenu() {
     menuSort: '',
   });
 
+  const {
+    menuCode,
+    menuName,
+    menuDescription,
+    menuCategory,
+    menuUrl,
+    menuStatus,
+    menuIcon,
+    menuSort,
+  } = menuForm;
+
+  // category form 데이터
   const [
     categoryForm,
     onChangeCategoryForm,
@@ -133,27 +112,6 @@ function ResourceMenu() {
     categorySort: '',
   });
 
-  const hierarchyCategoriesData = hierarchyCategories?.map(
-    ({ code, name, render }: any) => ({
-      code,
-      name,
-      render: (
-        <div style={{ paddingLeft: (render - 1) * 10 + 'px' }}>{name}</div>
-      ),
-    }),
-  );
-
-  const {
-    menuCode,
-    menuName,
-    menuDescription,
-    menuCategory,
-    menuUrl,
-    menuStatus,
-    menuIcon,
-    menuSort,
-  } = menuForm;
-
   const {
     categoryCode,
     categoryName,
@@ -164,6 +122,30 @@ function ResourceMenu() {
     categorySort,
   } = categoryForm;
 
+  // 조회 해온 상위 카테고리 데이터 가공
+  const hierarchyCategoriesData = hierarchyCategories?.map(
+    ({ code, name, render }: any) => ({
+      code,
+      name,
+      render: (
+        <div style={{ paddingLeft: (render - 1) * 10 + 'px' }}>{name}</div>
+      ),
+    }),
+  );
+
+  // icon 데이터들
+  const iconCodes = iconTypes.map((icon) => ({
+    code: icon,
+    name: icon,
+    render: (
+      <Container>
+        <Icon icon={icon} />
+        <div>{icon}</div>
+      </Container>
+    ),
+  }));
+
+  // 테이블 model
   const model: TableModelProps[] = useMemo(
     () => [
       {
@@ -226,77 +208,167 @@ function ResourceMenu() {
     [],
   );
 
-  const onSelectRow = useCallback((id: string, rowValue: any) => {
-    row = rowValue;
-    if (rowValue.type === 'MENU') {
-      setModBtnDisable(false);
-      setDelBtnDisable(false);
-    } else {
-      setModBtnDisable(true);
-      setDelBtnDisable(true);
-    }
-  }, []);
+  /******************************************************************
+   * Action 함수들
+   ******************************************************************/
+  // menu 데이터 조회
+  const [menus, getMenus]: any = useAsyncGetAction(
+    () => pageData && getAction(pageData.buttonMap.BTN_RESOURCE_MENU_FIND.url),
+    [pageData],
+    {
+      skip: false,
+      onSuccess: () => {
+        setPageState(initPageState);
+      },
+    },
+  );
 
-  const onSaveCategory = (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  // 메뉴 등록
+  const [postMenu] = useAsyncAction(
+    () =>
+      postAction(pageData.buttonMap.BTN_RESOURCE_MENU_ADD.url, {
+        name: menuName,
+        description: menuDescription,
+        status: menuStatus,
+        code: menuCode,
+        menuCategoryId: menuCategory,
+        url: menuUrl,
+        icon: menuIcon,
+        sort: menuSort,
+      }),
+    {
+      onSuccess: () => {
+        setPageState((state) => ({ ...state, openMenuModal: false }));
+        getMenus();
+        getHierarchyCategories();
+      },
+    },
+  );
 
-    const params = {
-      name: categoryName,
-      description: categoryDescription,
-      status: categoryStatus,
-      code: categoryCode,
-      parentId: categoryParent,
-      sort: categorySort,
-      icon: categoryIcon,
-    };
+  // 메뉴 수정
+  const [putMenu] = useAsyncAction(
+    () =>
+      putAction('/api/resources/menus/' + row.resourceId, {
+        name: menuName,
+        description: menuDescription,
+        status: menuStatus,
+        code: menuCode,
+        menuCategoryId: menuCategory,
+        url: menuUrl,
+        icon: menuIcon,
+        sort: menuSort,
+      }),
+    {
+      onSuccess: () => {
+        setPageState((state) => ({ ...state, openMenuModal: false }));
+        getMenus();
+        getHierarchyCategories();
+      },
+    },
+  );
 
-    axios
-      .post('/api/resources/menu-categories', params)
-      .then((response) => console.log(response));
-  };
+  // 메뉴 삭제
+  const [deleteMenu] = useAsyncAction(
+    () => deleteAction('/api/resources/menus/' + row.resourceId),
+    {
+      onSuccess: () => {
+        setPageState((state) => ({ ...state, openDeleteMenuDialog: false }));
+        getMenus();
+        getHierarchyCategories();
+      },
+      onError: () => {
+        handleError();
+      },
+    },
+  );
 
-  const onSaveMenu = (e: FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  // 카테고리 등록
+  const [postCategory] = useAsyncAction(
+    () =>
+      postAction('/api/resources/menu-categories', {
+        name: categoryName,
+        description: categoryDescription,
+        status: categoryStatus,
+        code: categoryCode,
+        parentId: categoryParent,
+        sort: categorySort,
+        icon: categoryIcon,
+      }),
+    {
+      onSuccess: () => {
+        setPageState((state) => ({ ...state, openCategoryModal: false }));
+        getMenus();
+        getHierarchyCategories();
+      },
+    },
+  );
 
-    if (buttonType === 'post') {
-      postMenu();
-    } else if (buttonType === 'put') {
-      putMenu();
-    }
-  };
+  // 카테고리 수정
+  const [putCategory] = useAsyncAction(
+    () =>
+      putAction('/api/resources/menu-categories/' + row.resourceId, {
+        name: categoryName,
+        description: categoryDescription,
+        status: categoryStatus,
+        code: categoryCode,
+        parentId: categoryParent,
+        sort: categorySort,
+        icon: categoryIcon,
+      }),
+    {
+      onSuccess: () => {
+        setPageState((state) => ({ ...state, openCategoryModal: false }));
+        getMenus();
+        getHierarchyCategories();
+      },
+    },
+  );
 
-  const defaultValue = {
-    code: '',
-    name: '선택없음',
-  };
+  // 카테고리 삭제
+  const [deleteCategory] = useAsyncAction(
+    () => deleteAction('/api/resources/menu-categories/' + row.resourceId),
+    {
+      onSuccess: () => {
+        setPageState((state) => ({
+          ...state,
+          openDeleteCategoryDialog: false,
+        }));
+        getMenus();
+        getHierarchyCategories();
+      },
+      onError: () => {
+        handleError();
+      },
+    },
+  );
 
-  const iconCodes = iconTypes.map((icon) => ({
-    code: icon,
-    name: icon,
-    render: (
-      <Container>
-        <Icon icon={icon} />
-        <div>{icon}</div>
-      </Container>
-    ),
-  }));
-
+  /******************************************************************
+   * 클라이언트 함수들
+   ******************************************************************/
+  // 테이블 버튼들
   const buttonInfos: ButtonInfoProps[] = [
     {
       id: 'BTN_RESOURCE_MENU_ADD',
       onClick: (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
-        setMenuItemDisable(false);
+        setPageState((state) => ({
+          ...state,
+          disableMenuItem: false,
+          openMenuModal: true,
+        }));
         buttonType = 'post';
 
         resetMenuForm();
-        setOpenMenuModal(true);
       },
     },
     {
       id: 'BTN_RESOURCE_MENU_MODIFY',
-      disable: modBtnDisable,
+      disable: pageState.disableMenuButton,
       onClick: (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
-        setMenuItemDisable(true);
+        setPageState((state) => ({
+          ...state,
+          disableMenuItem: true,
+          openMenuModal: true,
+        }));
         buttonType = 'put';
 
         replaceMenuForm({
@@ -309,40 +381,138 @@ function ResourceMenu() {
           menuIcon: row.icon,
           menuSort: row.sort,
         });
-        setOpenMenuModal(true);
       },
     },
     {
       id: 'BTN_RESOURCE_MENU_DELETE',
-      disable: delBtnDisable,
+      disable: pageState.disableMenuButton,
       onClick: (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
-        setDeleteMenuDialog(true);
+        setPageState((state) => ({ ...state, openDeleteMenuDialog: true }));
       },
     },
     {
       id: 'BTN_RESOURCE_MENU_CATEGORY_ADD',
       onClick: (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
+        setPageState((state) => ({
+          ...state,
+          disableCategoryItem: false,
+          openCategoryModal: true,
+        }));
+        buttonType = 'post';
+
         resetCategoryForm();
-        setOpenCategoryModal(true);
+      },
+    },
+    {
+      id: 'BTN_RESOURCE_MENU_CATEGORY_MODIFY',
+      disable: pageState.disableCategoryButton,
+      onClick: (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
+        setPageState((state) => ({
+          ...state,
+          disableCategoryItem: true,
+          openCategoryModal: true,
+        }));
+        buttonType = 'put';
+
+        replaceCategoryForm({
+          categoryCode: row.code,
+          categoryName: row.name,
+          categoryDescription: row.description,
+          categoryParent: String(row.parentId),
+          categoryStatus: row.status,
+          categoryIcon: row.icon,
+          categorySort: row.sort,
+        });
+      },
+    },
+    {
+      id: 'BTN_RESOURCE_MENU_CATEGORY_DELETE',
+      disable: pageState.disableCategoryButton,
+      onClick: (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
+        setPageState((state) => ({ ...state, openDeleteCategoryDialog: true }));
       },
     },
   ];
   const buttons = useButtons(pageData && pageData.buttonMap, buttonInfos);
 
+  // error 핸들링 함수
+  const handleError = () => {
+    setPageState((state) => ({
+      ...state,
+      openDeleteMenuDialog: false,
+      openDeleteCategoryDialog: false,
+    }));
+  };
+
+  // 테이블 select 시 콜백
+  const onSelectRow = useCallback((id: string, rowValue: any) => {
+    row = rowValue;
+    if (rowValue.type === 'MENU') {
+      setPageState((state) => ({
+        ...state,
+        disableMenuButton: false,
+        disableCategoryButton: true,
+      }));
+    } else {
+      setPageState((state) => ({
+        ...state,
+        disableMenuButton: true,
+        disableCategoryButton: false,
+      }));
+    }
+  }, []);
+
+  // 카테고리 저장
+  const onSaveCategory = (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    if (buttonType === 'post') {
+      postCategory();
+    } else if (buttonType === 'put') {
+      putCategory();
+    }
+  };
+
+  // 메뉴 저장
+  const onSaveMenu = (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    if (buttonType === 'post') {
+      postMenu();
+    } else if (buttonType === 'put') {
+      putMenu();
+    }
+  };
+
+  // 페이지 데이터 로딩 전엔 Loading 표시
   if (!pageData) {
     return <Loading />;
   }
 
-  // console.log(pageData);
-
   return (
     <>
       <Dialog
-        visible={deleteMenuDialog}
+        visible={pageState.openDeleteMenuDialog}
         type="info"
         isConfirm
         onConfirm={deleteMenu}
-        onCancel={() => setDeleteMenuDialog(false)}
+        onCancel={() =>
+          setPageState((state) => ({ ...state, openDeleteMenuDialog: false }))
+        }
+      >
+        정말 삭제하시겠습니까?
+      </Dialog>
+      <Dialog
+        visible={pageState.openDeleteCategoryDialog}
+        type="info"
+        isConfirm
+        onConfirm={deleteCategory}
+        onCancel={() =>
+          setPageState((state) => ({
+            ...state,
+            openDeleteCategoryDialog: false,
+          }))
+        }
       >
         정말 삭제하시겠습니까?
       </Dialog>
@@ -365,7 +535,7 @@ function ResourceMenu() {
         onSelectRow={onSelectRow}
       />
 
-      <Modal visible={openMenuModal} title="메뉴 등록/수정">
+      <Modal visible={pageState.openMenuModal} title="메뉴 등록/수정">
         <Form onSubmit={onSaveMenu}>
           <Row>
             <LabelInput
@@ -374,7 +544,7 @@ function ResourceMenu() {
               value={menuCode}
               onChange={onChangeMenuForm}
               name="menuCode"
-              disabled={menuItemDisable}
+              disabled={pageState.disableMenuItem}
             />
           </Row>
           <Row>
@@ -412,7 +582,7 @@ function ResourceMenu() {
               value={menuCategory}
               onChange={onChangeMenuForm}
               name="menuCategory"
-              disabled={menuItemDisable}
+              disabled={pageState.disableMenuItem}
             />
           </Row>
           <Row>
@@ -447,12 +617,16 @@ function ResourceMenu() {
           </Row>
           <InFormContainer>
             <SaveButton />
-            <CloseButton onClick={() => setOpenMenuModal(false)} />
+            <CloseButton
+              onClick={() =>
+                setPageState((state) => ({ ...state, openMenuModal: false }))
+              }
+            />
           </InFormContainer>
         </Form>
       </Modal>
 
-      <Modal visible={openCategoryModal} title="카테고리 등록/수정">
+      <Modal visible={pageState.openCategoryModal} title="카테고리 등록/수정">
         <Form onSubmit={onSaveCategory}>
           <Row>
             <LabelInput
@@ -460,6 +634,7 @@ function ResourceMenu() {
               label="카테고리 코드"
               value={categoryCode}
               onChange={onChangeCategoryForm}
+              disabled={pageState.disableCategoryItem}
               name="categoryCode"
             />
           </Row>
@@ -488,6 +663,7 @@ function ResourceMenu() {
               defaultValue={{ code: '', name: '최상위 카테고리' }}
               value={categoryParent}
               onChange={onChangeCategoryForm}
+              disabled={pageState.disableCategoryItem}
               name="categoryParent"
             />
           </Row>
@@ -523,7 +699,14 @@ function ResourceMenu() {
           </Row>
           <InFormContainer>
             <SaveButton />
-            <CloseButton onClick={() => setOpenCategoryModal(false)} />
+            <CloseButton
+              onClick={() =>
+                setPageState((state) => ({
+                  ...state,
+                  openCategoryModal: false,
+                }))
+              }
+            />
           </InFormContainer>
         </Form>
       </Modal>
