@@ -37,7 +37,11 @@ export default function usePage(url: string, onSuccess?: Function) {
       axios.defaults.headers.common['Authorization'] =
         response.headers.authorization;
 
-      const responsePageData = await axios.get(url);
+      const responsePageData = await axios.get(url, {
+        params: {
+          menuPath: window.location.pathname,
+        },
+      });
       axios.defaults.headers.common['pageId'] = responsePageData.data.pageId;
 
       if (onSuccess) {

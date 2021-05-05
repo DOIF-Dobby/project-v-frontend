@@ -1,8 +1,7 @@
 import {
-  Button,
   CloseButton,
   Container,
-  Dialog,
+  DeleteDialog,
   Form,
   Icon,
   iconTypes,
@@ -11,8 +10,10 @@ import {
   LabelSelect,
   Loading,
   Modal,
+  PageHeader,
   Row,
   SaveButton,
+  SearchButton,
   Table,
   TableModelProps,
   useChange,
@@ -462,6 +463,12 @@ function ResourceMenu() {
     }
   }, []);
 
+  // 메뉴/카테고리 조회
+  const onSearchMenus = (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    getMenus();
+  };
+
   // 카테고리 저장
   const onSaveCategory = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -491,21 +498,15 @@ function ResourceMenu() {
 
   return (
     <>
-      <Dialog
+      <DeleteDialog
         visible={pageState.openDeleteMenuDialog}
-        type="info"
-        isConfirm
         onConfirm={deleteMenu}
         onCancel={() =>
           setPageState((state) => ({ ...state, openDeleteMenuDialog: false }))
         }
-      >
-        정말 삭제하시겠습니까?
-      </Dialog>
-      <Dialog
+      />
+      <DeleteDialog
         visible={pageState.openDeleteCategoryDialog}
-        type="info"
-        isConfirm
         onConfirm={deleteCategory}
         onCancel={() =>
           setPageState((state) => ({
@@ -513,16 +514,15 @@ function ResourceMenu() {
             openDeleteCategoryDialog: false,
           }))
         }
-      >
-        정말 삭제하시겠습니까?
-      </Dialog>
+      />
 
-      <Container align="right">
-        <Button onClick={getMenus}>
-          <Icon icon="search" />
-          조회
-        </Button>
-      </Container>
+      <PageHeader menuName={pageData.menuName} menuList={pageData.menuList} />
+
+      <Form onSubmit={onSearchMenus}>
+        <InFormContainer align="right">
+          <SearchButton />
+        </InFormContainer>
+      </Form>
 
       <Table
         caption="메뉴 자원 목록"
