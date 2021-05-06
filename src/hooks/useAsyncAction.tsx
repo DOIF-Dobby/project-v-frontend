@@ -130,6 +130,8 @@ function useAsyncAction(callback: Function, options?: AsyncActionTypes) {
         onError(error.response);
       }
 
+      console.log(error.response);
+
       setDialog(() => ({
         visible: true,
         type: 'error',
