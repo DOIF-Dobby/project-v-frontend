@@ -74,11 +74,20 @@ function reducer(state: any, action: any) {
       return {
         data: action.data,
         error: null,
+        validation: {},
       };
     case 'ERROR':
       return {
         data: null,
         error: action.error,
+        validation: action.error.data.validationMap
+          ? action.error.data.validationMap
+          : {},
+      };
+    case 'CLEAN_VALIDATION':
+      return {
+        ...state,
+        validation: {},
       };
     default:
       throw new Error(`Unhandled action type: ${action.type}`);
@@ -96,12 +105,13 @@ function useAsyncAction(callback: Function, options?: AsyncActionTypes) {
   const [state, dispatch] = useReducer(reducer, {
     data: null,
     error: null,
+    validation: {},
   });
 
   const onSuccess = options?.onSuccess;
   const onError = options?.onError;
 
-  const { data } = state;
+  const { data, error, validation } = state;
 
   const setLoading = useSetRecoilState(loadingState);
   const setDialog = useSetRecoilState(dialogState);
@@ -123,30 +133,38 @@ function useAsyncAction(callback: Function, options?: AsyncActionTypes) {
         onSuccess(data);
       }
     } catch (error) {
-      dispatch({ type: 'ERROR', error });
+      dispatch({ type: 'ERROR', error: error.response });
       setLoading(false);
 
       if (onError) {
         onError(error.response);
       }
 
-      console.log(error.response);
+      const errorCode = error.response.data.code;
 
-      setDialog(() => ({
-        visible: true,
-        type: 'error',
-        content: (
-          <Container direction="column">
-            <div>오류가 발생하였습니다.</div>
-            <div>오류코드: {error.response.status}</div>
-            <div>오류메세지: {error.response.statusText}</div>
-          </Container>
-        ),
-      }));
+      // 2초 뒤에 validation clean 처리
+      setTimeout(() => dispatch({ type: 'CLEAN_VALIDATION' }), 2000);
+
+      console.error(error.response.data);
+
+      // validation 관련된 error가 아니라면 dialog 오픈
+      if (errorCode !== 'VALIDATION') {
+        setDialog(() => ({
+          visible: true,
+          type: 'error',
+          content: (
+            <Container direction="column">
+              <div>오류가 발생하였습니다.</div>
+              <div>오류코드: {error.response.status}</div>
+              <div>오류메세지: {error.response.statusText}</div>
+            </Container>
+          ),
+        }));
+      }
     }
   };
 
-  return [fetchData, data];
+  return [fetchData, validation, data, error];
 }
 
 export default useAsyncAction;
