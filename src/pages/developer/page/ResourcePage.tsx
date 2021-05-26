@@ -1,59 +1,108 @@
-import { Icon, Table, TableModelProps } from 'doif-react-kit';
-import React, { useMemo } from 'react';
+import {
+  CloseButton,
+  DeleteDialog,
+  Form,
+  Icon,
+  InFormContainer,
+  LabelInput,
+  LabelSelect,
+  Loading,
+  Modal,
+  PageHeader,
+  Row,
+  SaveButton,
+  Table,
+  TableModelProps,
+  useChange,
+} from 'doif-react-kit';
+import React, { FormEvent, useCallback, useMemo, useState } from 'react';
+import { defaultValue } from '../../../common/commonValue';
+import mergeValid from '../../../common/mergeValid';
+import useAsyncAction, {
+  deleteAction,
+  postAction,
+  putAction,
+} from '../../../hooks/useAsyncAction';
+import useAsyncGetAction, { getAction } from '../../../hooks/useAsyncGetAction';
+import useButtons, { ButtonInfoProps } from '../../../hooks/useButtons';
+import useCodes from '../../../hooks/useCodes';
+import usePage from '../../../hooks/usePage';
 
+// table row data
+let row: any = {};
+// button 클릭시 등록/수정 타입
+let buttonType: string = '';
+
+// 페이지 자원 페이지
 function ResourcePage() {
+  /******************************************************************
+   * 기본 데이터 및 state
+   *******************************************************************/
+  // 페이지 데이터 조회
+  const [pageData] = usePage('/api/pages/resources/page');
+  // 코드 조회
+  const [enableCodes]: any = useCodes('ENABLE_STATUS', pageData);
+
+  // 초기 페이지 상태
+  const initPageState = {
+    openModal: false,
+    disableButton: true,
+    openDeleteDialog: false,
+    disableItem: false,
+  };
+
+  // 페이지 상태
+  const [pageState, setPageState] = useState(initPageState);
+
+  // form 데이터
+  const [form, onChangeForm, replaceForm, resetForm] = useChange({
+    code: '',
+    name: '',
+    description: '',
+    url: '',
+    status: '',
+  });
+
+  const { code, name, description, url, status } = form;
+
+  // 테이블 model
   const model: TableModelProps[] = useMemo(
     () => [
       {
-        label: '메뉴명',
-        name: 'name',
+        label: '페이지 코드',
+        name: 'code',
         width: 250,
         align: 'left',
       },
       {
-        label: '메뉴 코드',
-        name: 'code',
+        label: '페이지명',
+        name: 'name',
         width: 250,
         align: 'left',
       },
       {
         label: '설명',
         name: 'description',
-        width: 350,
+        width: 450,
         align: 'left',
       },
       {
         label: '사용 가능 상태',
         name: 'statusName',
         width: 120,
-      },
-      {
-        label: 'URL',
-        name: 'url',
-        width: 250,
-        align: 'left',
-      },
-      {
-        label: '아이콘',
-        name: 'icon',
-        width: 120,
         formatter: (cellValue: any) => {
-          return cellValue.props.value ? (
-            <Icon icon={cellValue.props.value} />
+          return cellValue.props.value === '가능' ? (
+            <span style={{ color: '#02c902' }}>{cellValue}</span>
           ) : (
-            cellValue
+            <span style={{ color: '#fc3d3d' }}>{cellValue}</span>
           );
         },
       },
       {
-        label: '구분',
-        name: 'typeName',
-        width: 120,
-      },
-      {
-        label: '정렬 순서',
-        name: 'sort',
-        width: 100,
+        label: 'URL',
+        name: 'url',
+        width: 350,
+        align: 'left',
       },
       {
         label: '',
@@ -64,187 +113,215 @@ function ResourcePage() {
     [],
   );
 
-  const data = useMemo(
-    () => [
-      {
-        resourceId: 60,
-        name: '개발자',
-        description: '개발자 메뉴 카테고리',
-        status: 'ENABLE',
-        statusName: '가능',
-        code: 'CATEGORY_DEV',
-        parentId: null,
-        paddingName: ' 개발자',
-        sort: 99,
-        depth: 1,
-        path: '99',
-        type: 'CATEGORY',
-        typeName: '카테고리',
-        icon: 'heart',
-        url: null,
-        childrenItems: [],
-        subRows: [
-          {
-            resourceId: 61,
-            name: '메뉴 관리',
-            description: '메뉴 리소스 관리 메뉴',
-            status: 'ENABLE',
-            statusName: '가능',
-            code: 'MENU_DEV_RESOURCE_MENU',
-            parentId: 60,
-            paddingName: '  메뉴 관리',
-            sort: 1,
-            depth: 2,
-            path: '99-1',
-            type: 'MENU',
-            typeName: '메뉴',
-            icon: 'lock',
-            url: '/dev/menu',
-            childrenItems: [],
-            subRows: [],
-          },
-          {
-            resourceId: 62,
-            name: '페이지 관리',
-            description: '페이지 리소스 관리 메뉴',
-            status: 'ENABLE',
-            statusName: '가능',
-            code: 'MENU_DEV_RESOURCE_PAGE',
-            parentId: 60,
-            paddingName: '  페이지 관리',
-            sort: 2,
-            depth: 2,
-            path: '99-2',
-            type: 'MENU',
-            typeName: '메뉴',
-            icon: null,
-            url: '/dev/page',
-            childrenItems: [],
-            subRows: [],
-          },
-          {
-            resourceId: 63,
-            name: '탭 관리',
-            description: '탭 리소스 관리 메뉴',
-            status: 'ENABLE',
-            statusName: '가능',
-            code: 'MENU_DEV_RESOURCE_TAB',
-            parentId: 60,
-            paddingName: '  탭 관리',
-            sort: 3,
-            depth: 2,
-            path: '99-3',
-            type: 'MENU',
-            typeName: '메뉴',
-            icon: null,
-            url: '/dev/tab',
-            childrenItems: [],
-            subRows: [],
-          },
-          {
-            resourceId: 64,
-            name: '버튼 관리',
-            description: '버튼 리소스 관리 메뉴',
-            status: 'ENABLE',
-            statusName: '가능',
-            code: 'MENU_DEV_RESOURCE_BUTTON',
-            parentId: 60,
-            paddingName: '  버튼 관리',
-            sort: 4,
-            depth: 2,
-            path: '99-4',
-            type: 'MENU',
-            typeName: '메뉴',
-            icon: null,
-            url: '/dev/button',
-            childrenItems: [],
-            subRows: [],
-          },
-          {
-            resourceId: 65,
-            name: '라벨 관리',
-            description: '라벨 리소스 관리 메뉴',
-            status: 'ENABLE',
-            statusName: '가능',
-            code: 'MENU_DEV_RESOURCE_LABEL',
-            parentId: 60,
-            paddingName: '  라벨 관리',
-            sort: 5,
-            depth: 2,
-            path: '99-5',
-            type: 'MENU',
-            typeName: '메뉴',
-            icon: null,
-            url: '/dev/label',
-            childrenItems: [],
-            subRows: [],
-          },
-          {
-            resourceId: 69,
-            name: '테스트',
-            description: '테스트 카테고리',
-            status: 'ENABLE',
-            statusName: '가능',
-            code: 'CATEGORY_TEST',
-            parentId: 60,
-            paddingName: '  테스트',
-            sort: 55,
-            depth: 2,
-            path: '99-55',
-            type: 'CATEGORY',
-            typeName: '카테고리',
-            icon: 'heart',
-            url: null,
-            childrenItems: [],
-            subRows: [
-              {
-                resourceId: 70,
-                name: '테스트2',
-                description: '테스트 카테고리2',
-                status: 'ENABLE',
-                statusName: '가능',
-                code: 'CATEGORY_TEST2',
-                parentId: 69,
-                paddingName: '   테스트2',
-                sort: 123,
-                depth: 3,
-                path: '99-55-123',
-                type: 'CATEGORY',
-                typeName: '카테고리',
-                icon: 'pencil',
-                url: null,
-                childrenItems: [],
-                subRows: [],
-              },
-            ],
-          },
-          {
-            resourceId: 66,
-            name: '메세지 관리',
-            description: '메세지 리소스 관리 메뉴',
-            status: 'ENABLE',
-            statusName: '가능',
-            code: 'MENU_DEV_RESOURCE_MESSAGE',
-            parentId: 60,
-            paddingName: '  메세지 관리',
-            sort: 6,
-            depth: 2,
-            path: '99-6',
-            type: 'MENU',
-            typeName: '메뉴',
-            icon: null,
-            url: '/dev/message',
-            childrenItems: [],
-            subRows: [],
-          },
-        ],
+  /******************************************************************
+   * Action 함수들
+   ******************************************************************/
+
+  // 페이지 등록/수정/삭제 시 성공 콜백
+  const asyncSucCallback = () => {
+    setPageState((state) => ({
+      ...state,
+      openModal: false,
+      openDeleteDialog: false,
+    }));
+    getPages();
+  };
+
+  // 페이지 데이터 조회
+  const [pages, getPages]: any = useAsyncGetAction(
+    () => pageData && getAction('/api/resources/pages'),
+    [pageData],
+    {
+      skip: false,
+      onSuccess: () => {
+        setPageState(initPageState);
       },
-    ],
-    [],
+    },
   );
 
+  // 페이지 등록
+  const [postPage, postPageValid] = useAsyncAction(
+    () => postAction('/api/resources/pages', form),
+    {
+      onSuccess: asyncSucCallback,
+    },
+  );
+
+  // 페이지 수정
+  const [putPage, putPageValid] = useAsyncAction(
+    () => putAction('/api/resources/pages/' + row.resourceId, form),
+    {
+      onSuccess: asyncSucCallback,
+    },
+  );
+
+  // 페이지 삭제
+  const [deletePage] = useAsyncAction(
+    () => deleteAction('/api/resources/pages/' + row.resourceId),
+    {
+      onSuccess: asyncSucCallback,
+    },
+  );
+
+  /******************************************************************
+   * 클라이언트 함수들
+   ******************************************************************/
+  // 테이블 버튼들
+  const buttonInfos: ButtonInfoProps[] = [
+    {
+      id: 'BTN_RESOURCE_PAGE_ADD',
+      onClick: (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
+        setPageState((state) => ({
+          ...state,
+          disableItem: false,
+          openModal: true,
+        }));
+        buttonType = 'post';
+
+        resetForm();
+      },
+    },
+    {
+      id: 'BTN_RESOURCE_PAGE_MODIFY',
+      disable: pageState.disableButton,
+      onClick: (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
+        setPageState((state) => ({
+          ...state,
+          disableItem: true,
+          openModal: true,
+        }));
+        buttonType = 'put';
+
+        replaceForm({
+          name: row.name,
+          description: row.description,
+          status: row.status,
+          code: row.code,
+          url: row.url,
+        });
+      },
+    },
+    {
+      id: 'BTN_RESOURCE_PAGE_DELETE',
+      disable: pageState.disableButton,
+      onClick: (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
+        setPageState((state) => ({ ...state, openDeleteDialog: true }));
+      },
+    },
+  ];
+  const buttons = useButtons(pageData && pageData.buttonMap, buttonInfos);
+
+  // 테이블 select 시 콜백
+  const onSelectRow = useCallback((id: string, rowValue: any) => {
+    row = rowValue;
+    setPageState((state) => ({
+      ...state,
+      disableButton: false,
+    }));
+  }, []);
+
+  // 페이지 저장
+  const onSavePage = (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    if (buttonType === 'post') {
+      postPage();
+    } else if (buttonType === 'put') {
+      putPage();
+    }
+  };
+
+  // Validation
+  const pageValid = mergeValid([postPageValid, putPageValid]);
+
+  // 페이지 데이터 로딩 전엔 Loading 표시
+  if (!pageData) {
+    return <Loading />;
+  }
+
   return (
-    <Table caption="Row 선택 시" model={model} data={data} enableTreeTable />
+    <>
+      <DeleteDialog
+        visible={pageState.openDeleteDialog}
+        onConfirm={deletePage}
+        onCancel={() =>
+          setPageState((state) => ({ ...state, openDeleteDialog: false }))
+        }
+      />
+
+      <PageHeader menuName={pageData.menuName} menuList={pageData.menuList} />
+      <Table
+        caption="페이지 자원 목록"
+        model={model}
+        buttons={buttons}
+        data={pages ? pages.content : []}
+        onSelectRow={onSelectRow}
+      />
+
+      <Modal visible={pageState.openModal} title="페이지 등록/수정">
+        <Form onSubmit={onSavePage}>
+          <Row>
+            <LabelInput
+              required
+              label="페이지 코드"
+              value={code}
+              onChange={onChangeForm}
+              name="code"
+              disabled={pageState.disableItem}
+              validation={pageValid.code}
+            />
+          </Row>
+          <Row>
+            <LabelInput
+              required
+              label="페이지명"
+              value={name}
+              onChange={onChangeForm}
+              name="name"
+              validation={pageValid.name}
+            />
+          </Row>
+          <Row>
+            <LabelInput
+              label="페이지 설명"
+              value={description}
+              onChange={onChangeForm}
+              name="description"
+            />
+          </Row>
+          <Row>
+            <LabelInput
+              required
+              label="URL"
+              value={url}
+              onChange={onChangeForm}
+              name="url"
+              validation={pageValid.url}
+            />
+          </Row>
+          <Row>
+            <LabelSelect
+              required
+              label="사용 가능 상태"
+              data={enableCodes}
+              defaultValue={defaultValue}
+              value={status}
+              onChange={onChangeForm}
+              name="status"
+              validation={pageValid.status}
+            />
+          </Row>
+          <InFormContainer>
+            <SaveButton />
+            <CloseButton
+              onClick={() =>
+                setPageState((state) => ({ ...state, openModal: false }))
+              }
+            />
+          </InFormContainer>
+        </Form>
+      </Modal>
+    </>
   );
 }
 

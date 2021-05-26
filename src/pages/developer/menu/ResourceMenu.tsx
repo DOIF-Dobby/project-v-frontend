@@ -260,7 +260,7 @@ function ResourceMenu() {
 
   // menu,category 데이터 조회
   const [menus, getMenus]: any = useAsyncGetAction(
-    () => pageData && getAction(pageData.buttonMap.BTN_RESOURCE_MENU_FIND.url),
+    () => pageData && getAction('/api/resources/menus'),
     [pageData],
     {
       skip: false,
