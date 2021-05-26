@@ -20,6 +20,7 @@ import {
 } from 'doif-react-kit';
 import React, { FormEvent, useCallback, useMemo, useState } from 'react';
 import { defaultValue } from '../../../common/commonValue';
+import mergeValid from '../../../common/mergeValid';
 import useAsyncAction, {
   deleteAction,
   postAction,
@@ -164,6 +165,13 @@ function ResourceMenu() {
         label: '사용 가능 상태',
         name: 'statusName',
         width: 120,
+        formatter: (cellValue: any) => {
+          return cellValue.props.value === '가능' ? (
+            <span style={{ color: '#02c902' }}>{cellValue}</span>
+          ) : (
+            <span style={{ color: '#fc3d3d' }}>{cellValue}</span>
+          );
+        },
       },
       {
         label: 'URL',
@@ -263,15 +271,15 @@ function ResourceMenu() {
   );
 
   // 메뉴 등록
-  const [postMenu, validation] = useAsyncAction(
-    () => postAction(pageData.buttonMap.BTN_RESOURCE_MENU_ADD.url, menuReqBody),
+  const [postMenu, postMenuValid] = useAsyncAction(
+    () => postAction('/api/resources/menus', menuReqBody),
     {
       onSuccess: asyncSucCallback,
     },
   );
 
   // 메뉴 수정
-  const [putMenu, validation2] = useAsyncAction(
+  const [putMenu, putMenuValid] = useAsyncAction(
     () => putAction('/api/resources/menus/' + row.resourceId, menuReqBody),
     {
       onSuccess: asyncSucCallback,
@@ -288,7 +296,7 @@ function ResourceMenu() {
   );
 
   // 카테고리 등록
-  const [postCategory] = useAsyncAction(
+  const [postCategory, postCategoryValid] = useAsyncAction(
     () => postAction('/api/resources/menu-categories', categoryReqBody),
     {
       onSuccess: asyncSucCallback,
@@ -296,7 +304,7 @@ function ResourceMenu() {
   );
 
   // 카테고리 수정
-  const [putCategory] = useAsyncAction(
+  const [putCategory, putCategoryValid] = useAsyncAction(
     () =>
       putAction(
         '/api/resources/menu-categories/' + row.resourceId,
@@ -455,6 +463,10 @@ function ResourceMenu() {
     }
   };
 
+  // Validation
+  const menuValid = mergeValid([postMenuValid, putMenuValid]);
+  const categoryValid = mergeValid([postCategoryValid, putCategoryValid]);
+
   // 페이지 데이터 로딩 전엔 Loading 표시
   if (!pageData) {
     return <Loading />;
@@ -509,7 +521,7 @@ function ResourceMenu() {
               onChange={onChangeMenuForm}
               name="menuCode"
               disabled={pageState.disableMenuItem}
-              validation={validation.code}
+              validation={menuValid.code}
             />
           </Row>
           <Row>
@@ -519,7 +531,7 @@ function ResourceMenu() {
               value={menuName}
               onChange={onChangeMenuForm}
               name="menuName"
-              validation={validation.name}
+              validation={menuValid.name}
             />
           </Row>
           <Row>
@@ -537,7 +549,7 @@ function ResourceMenu() {
               value={menuUrl}
               onChange={onChangeMenuForm}
               name="menuUrl"
-              validation={validation.url || validation2.url}
+              validation={menuValid.url}
             />
           </Row>
           <Row>
@@ -550,7 +562,7 @@ function ResourceMenu() {
               onChange={onChangeMenuForm}
               name="menuCategory"
               disabled={pageState.disableMenuItem}
-              validation={validation.menuCategoryId}
+              validation={menuValid.menuCategoryId}
             />
           </Row>
           <Row>
@@ -570,7 +582,7 @@ function ResourceMenu() {
               value={menuSort}
               onChange={onChangeMenuForm}
               name="menuSort"
-              validation={validation.sort}
+              validation={menuValid.sort}
             />
           </Row>
           <Row>
@@ -582,7 +594,7 @@ function ResourceMenu() {
               value={menuStatus}
               onChange={onChangeMenuForm}
               name="menuStatus"
-              validation={validation.status}
+              validation={menuValid.status}
             />
           </Row>
           <InFormContainer>
@@ -606,6 +618,7 @@ function ResourceMenu() {
               onChange={onChangeCategoryForm}
               disabled={pageState.disableCategoryItem}
               name="categoryCode"
+              validation={categoryValid.code}
             />
           </Row>
           <Row>
@@ -615,6 +628,7 @@ function ResourceMenu() {
               value={categoryName}
               onChange={onChangeCategoryForm}
               name="categoryName"
+              validation={categoryValid.name}
             />
           </Row>
           <Row>
@@ -623,6 +637,7 @@ function ResourceMenu() {
               value={categoryDescription}
               onChange={onChangeCategoryForm}
               name="categoryDescription"
+              validation={categoryValid.description}
             />
           </Row>
           <Row>
@@ -653,6 +668,7 @@ function ResourceMenu() {
               value={categorySort}
               onChange={onChangeCategoryForm}
               name="categorySort"
+              validation={categoryValid.sort}
             />
           </Row>
           <Row>
@@ -664,6 +680,7 @@ function ResourceMenu() {
               value={categoryStatus}
               onChange={onChangeCategoryForm}
               name="categoryStatus"
+              validation={categoryValid.status}
             />
           </Row>
           <InFormContainer>

@@ -47,7 +47,7 @@ export async function putAction(
 }
 
 /**
- * get 요청 시 사용
+ * delete 요청 시 사용
  * @param url 요청 url
  * @param params request url 매개 변수
  * @param headers request header에 넣을 데이터
