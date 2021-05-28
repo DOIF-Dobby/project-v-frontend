@@ -1,5 +1,6 @@
 import {
   CloseButton,
+  Container,
   DeleteDialog,
   Form,
   InFormContainer,
@@ -14,7 +15,7 @@ import {
   TableModelProps,
   useChange,
 } from 'doif-react-kit';
-import React, { FormEvent, useCallback, useMemo, useState } from 'react';
+import React, { FormEvent, useCallback, useState } from 'react';
 import { defaultValue } from '../../../common/commonValue';
 import mergeValid from '../../../common/mergeValid';
 import useAsyncAction, {
@@ -25,30 +26,34 @@ import useAsyncAction, {
 import useAsyncGetAction, { getAction } from '../../../hooks/useAsyncGetAction';
 import useButtons, { ButtonInfoProps } from '../../../hooks/useButtons';
 import useCodes from '../../../hooks/useCodes';
+import useLabels from '../../../hooks/useLabels';
 import usePage from '../../../hooks/usePage';
+import useTableModel from '../../../hooks/useTableModel';
 
 // table row data
-let row: any = {};
+let pageRow: any = {};
+let labelRow: any = {};
 // button 클릭시 등록/수정 타입
 let buttonType: string = '';
 
 /**
- * 페이지 자원 관리 페이지
- * @returns ResourcePage
+ * 라벨 자원 관리 페이지
+ * @returns ResourceLabel
  */
-function ResourcePage() {
+function ResourceLabel() {
   /******************************************************************
    * 기본 데이터 및 state
    *******************************************************************/
   // 페이지 데이터 조회
-  const [pageData] = usePage('/api/pages/resources/page');
+  const [pageData] = usePage('/api/pages/resources/label');
   // 코드 조회
   const [enableCodes]: any = useCodes('ENABLE_STATUS', pageData);
 
   // 초기 페이지 상태
   const initPageState = {
     openModal: false,
-    disableButton: true,
+    disablePostButton: true,
+    disablePutDeleteButton: true,
     openDeleteDialog: false,
     disableItem: false,
   };
@@ -61,35 +66,69 @@ function ResourcePage() {
     code: '',
     name: '',
     description: '',
-    url: '',
     status: '',
   });
 
-  const { code, name, description, url, status } = form;
+  const { code, name, description, status } = form;
 
-  // 테이블 model
-  const model: TableModelProps[] = useMemo(
-    () => [
+  // 라벨들
+  const {
+    LABEL_RESOURCE_LABEL_CODE,
+    LABEL_RESOURCE_LABEL_NAME,
+    LABEL_RESOURCE_LABEL_DESCRIPTION,
+    LABEL_RESOURCE_LABEL_STATUS,
+    LABEL_RESOURCE_LABEL_CAPTION,
+    LABEL_RESOURCE_LABEL_LIST,
+    LABEL_RESOURCE_LABEL_PAGE_LIST,
+  } = useLabels(pageData);
+
+  // 페이지 테이블 model
+  const pageTableModel: TableModelProps[] = useTableModel(
+    [
       {
-        label: '페이지 코드',
+        label: 'LABEL_RESOURCE_LABEL_PAGE_CODE',
         name: 'code',
         width: 250,
         align: 'left',
       },
       {
-        label: '페이지명',
+        label: 'LABEL_RESOURCE_LABEL_PAGE_NAME',
+        name: 'name',
+        width: 300,
+        align: 'left',
+      },
+      {
+        label: '',
+        name: 'resourceId',
+        hidden: true,
+      },
+    ],
+    pageData,
+  );
+
+  // 라벨 테이블 model
+  const labelTableModel: TableModelProps[] = useTableModel(
+    [
+      {
+        label: 'LABEL_RESOURCE_LABEL_CODE',
+        name: 'code',
+        width: 250,
+        align: 'left',
+      },
+      {
+        label: 'LABEL_RESOURCE_LABEL_NAME',
         name: 'name',
         width: 250,
         align: 'left',
       },
       {
-        label: '설명',
+        label: 'LABEL_RESOURCE_LABEL_DESCRIPTION',
         name: 'description',
-        width: 450,
+        width: 300,
         align: 'left',
       },
       {
-        label: '사용 가능 상태',
+        label: 'LABEL_RESOURCE_LABEL_STATUS',
         name: 'statusName',
         width: 120,
         formatter: (cellValue: any) => {
@@ -101,18 +140,12 @@ function ResourcePage() {
         },
       },
       {
-        label: 'URL',
-        name: 'url',
-        width: 350,
-        align: 'left',
-      },
-      {
         label: '',
         name: 'resourceId',
         hidden: true,
       },
     ],
-    [],
+    pageData,
   );
 
   /******************************************************************
@@ -125,12 +158,13 @@ function ResourcePage() {
       ...state,
       openModal: false,
       openDeleteDialog: false,
+      disablePutDeleteButton: true,
     }));
-    getPages();
+    getLabels();
   };
 
   // 페이지 데이터 조회
-  const [pages, getPages]: any = useAsyncGetAction(
+  const [pages]: any = useAsyncGetAction(
     () => pageData && getAction('/api/resources/pages'),
     [pageData],
     {
@@ -141,25 +175,46 @@ function ResourcePage() {
     },
   );
 
-  // 페이지 등록
-  const [postPage, postPageValid] = useAsyncAction(
-    () => postAction('/api/resources/pages', form),
+  // 라벨 데이터 조회
+  const [labels, getLabels]: any = useAsyncGetAction(
+    () =>
+      pageData &&
+      getAction(`/api/resources/pages/${pageRow.resourceId}/labels`),
+    [pageData],
+    {
+      skip: true,
+      onSuccess: () => {
+        setPageState((state) => ({
+          ...state,
+          disablePostButton: false,
+        }));
+      },
+    },
+  );
+
+  // 라벨 등록
+  const [postLabel, postLabelValid] = useAsyncAction(
+    () =>
+      postAction('/api/resources/labels', {
+        ...form,
+        pageId: pageRow.resourceId,
+      }),
     {
       onSuccess: asyncSucCallback,
     },
   );
 
-  // 페이지 수정
-  const [putPage, putPageValid] = useAsyncAction(
-    () => putAction('/api/resources/pages/' + row.resourceId, form),
+  // 라벨 수정
+  const [putLabel, putLabelValid] = useAsyncAction(
+    () => putAction('/api/resources/labels/' + labelRow.resourceId, form),
     {
       onSuccess: asyncSucCallback,
     },
   );
 
-  // 페이지 삭제
-  const [deletePage] = useAsyncAction(
-    () => deleteAction('/api/resources/pages/' + row.resourceId),
+  // 라벨 삭제
+  const [deleteLabel] = useAsyncAction(
+    () => deleteAction('/api/resources/labels/' + labelRow.resourceId),
     {
       onSuccess: asyncSucCallback,
     },
@@ -171,7 +226,8 @@ function ResourcePage() {
   // 테이블 버튼들
   const buttonInfos: ButtonInfoProps[] = [
     {
-      id: 'BTN_RESOURCE_PAGE_ADD',
+      id: 'BTN_RESOURCE_LABEL_ADD',
+      disable: pageState.disablePostButton,
       onClick: (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
         setPageState((state) => ({
           ...state,
@@ -184,8 +240,8 @@ function ResourcePage() {
       },
     },
     {
-      id: 'BTN_RESOURCE_PAGE_MODIFY',
-      disable: pageState.disableButton,
+      id: 'BTN_RESOURCE_LABEL_MODIFY',
+      disable: pageState.disablePutDeleteButton,
       onClick: (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
         setPageState((state) => ({
           ...state,
@@ -195,17 +251,17 @@ function ResourcePage() {
         buttonType = 'put';
 
         replaceForm({
-          name: row.name,
-          description: row.description,
-          status: row.status,
-          code: row.code,
-          url: row.url,
+          name: labelRow.name,
+          description: labelRow.description,
+          status: labelRow.status,
+          code: labelRow.code,
+          pageId: labelRow.pageId,
         });
       },
     },
     {
-      id: 'BTN_RESOURCE_PAGE_DELETE',
-      disable: pageState.disableButton,
+      id: 'BTN_RESOURCE_LABEL_DELETE',
+      disable: pageState.disablePutDeleteButton,
       onClick: (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
         setPageState((state) => ({ ...state, openDeleteDialog: true }));
       },
@@ -213,28 +269,42 @@ function ResourcePage() {
   ];
   const buttons = useButtons(pageData && pageData.buttonMap, buttonInfos);
 
-  // 테이블 select 시 콜백
-  const onSelectRow = useCallback((id: string, rowValue: any) => {
-    row = rowValue;
+  // 페이지 자원 목록 테이블 select 시 콜백
+  const onSelectPageTableRow = useCallback(
+    (id: string, rowValue: any) => {
+      pageRow = rowValue;
+      setPageState((state) => ({
+        ...state,
+        disablePostButton: false,
+      }));
+
+      getLabels();
+    },
+    [getLabels],
+  );
+
+  // 라벨 자원 목록 테이블 select 시 콜백
+  const onSelectLabelTableRow = useCallback((id: string, rowValue: any) => {
+    labelRow = rowValue;
     setPageState((state) => ({
       ...state,
-      disableButton: false,
+      disablePutDeleteButton: false,
     }));
   }, []);
 
-  // 페이지 저장
-  const onSavePage = (e: FormEvent<HTMLFormElement>) => {
+  // 라벨 저장
+  const onSaveLabel = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     if (buttonType === 'post') {
-      postPage();
+      postLabel();
     } else if (buttonType === 'put') {
-      putPage();
+      putLabel();
     }
   };
 
   // Validation
-  const pageValid = mergeValid([postPageValid, putPageValid]);
+  const labelValid = mergeValid([postLabelValid, putLabelValid]);
 
   // 페이지 데이터 로딩 전엔 Loading 표시
   if (!pageData) {
@@ -245,72 +315,75 @@ function ResourcePage() {
     <>
       <DeleteDialog
         visible={pageState.openDeleteDialog}
-        onConfirm={deletePage}
+        onConfirm={deleteLabel}
         onCancel={() =>
           setPageState((state) => ({ ...state, openDeleteDialog: false }))
         }
       />
 
       <PageHeader menuName={pageData.menuName} menuList={pageData.menuList} />
-      <Table
-        caption="페이지 자원 목록"
-        model={model}
-        buttons={buttons}
-        data={pages ? pages.content : []}
-        onSelectRow={onSelectRow}
-      />
 
-      <Modal visible={pageState.openModal} title="페이지 등록/수정">
-        <Form onSubmit={onSavePage}>
+      <Container>
+        <div style={{ width: '35%' }}>
+          <Table
+            caption={LABEL_RESOURCE_LABEL_PAGE_LIST}
+            model={pageTableModel}
+            data={pages ? pages.content : []}
+            onSelectRow={onSelectPageTableRow}
+          />
+        </div>
+        <div style={{ width: '65%' }}>
+          <Table
+            caption={LABEL_RESOURCE_LABEL_LIST}
+            buttons={buttons}
+            model={labelTableModel}
+            data={labels ? labels.content : []}
+            onSelectRow={onSelectLabelTableRow}
+          />
+        </div>
+      </Container>
+
+      <Modal visible={pageState.openModal} title={LABEL_RESOURCE_LABEL_CAPTION}>
+        <Form onSubmit={onSaveLabel}>
           <Row>
             <LabelInput
               required
-              label="페이지 코드"
+              label={LABEL_RESOURCE_LABEL_CODE}
               value={code}
               onChange={onChangeForm}
               name="code"
               disabled={pageState.disableItem}
-              validation={pageValid.code}
+              validation={labelValid.code}
             />
           </Row>
           <Row>
             <LabelInput
               required
-              label="페이지명"
+              label={LABEL_RESOURCE_LABEL_NAME}
               value={name}
               onChange={onChangeForm}
               name="name"
-              validation={pageValid.name}
+              validation={labelValid.name}
             />
           </Row>
           <Row>
             <LabelInput
-              label="페이지 설명"
+              label={LABEL_RESOURCE_LABEL_DESCRIPTION}
               value={description}
               onChange={onChangeForm}
               name="description"
             />
           </Row>
           <Row>
-            <LabelInput
-              required
-              label="URL"
-              value={url}
-              onChange={onChangeForm}
-              name="url"
-              validation={pageValid.url}
-            />
-          </Row>
-          <Row>
             <LabelSelect
               required
-              label="사용 가능 상태"
+              label={LABEL_RESOURCE_LABEL_STATUS}
               data={enableCodes}
               defaultValue={defaultValue}
               value={status}
               onChange={onChangeForm}
               name="status"
-              validation={pageValid.status}
+              validation={labelValid.status}
             />
           </Row>
           <InFormContainer>
@@ -327,4 +400,4 @@ function ResourcePage() {
   );
 }
 
-export default ResourcePage;
+export default ResourceLabel;

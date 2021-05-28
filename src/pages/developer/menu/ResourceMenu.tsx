@@ -36,7 +36,10 @@ let row: any = {};
 // button 클릭시 등록/수정 타입
 let buttonType: string = '';
 
-// 메뉴 자원 페이지
+/**
+ * 메뉴 자원 관리 페이지
+ * @returns ResourceMenu
+ */
 function ResourceMenu() {
   /******************************************************************
    * 기본 데이터 및 state

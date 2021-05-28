@@ -6,6 +6,7 @@ import AppHeader from '../components/AppHeader';
 import AppMenu from '../components/AppMenu';
 import LoadingAndDialog from '../components/LoadingAndDialog';
 import { useWindowSize } from '../hooks/useWindowSize';
+import ResourceLabel from './developer/label/ResourceLabel';
 import ResourceMenu from './developer/menu/ResourceMenu';
 import ResourcePage from './developer/page/ResourcePage';
 import Test from './Test';
@@ -57,6 +58,7 @@ function Main() {
               <Route path="/" component={Test} exact />
               <Route path="/dev/menu" component={ResourceMenu} />
               <Route path="/dev/page" component={ResourcePage} />
+              <Route path="/dev/label" component={ResourceLabel} />
             </Container>
           </Box>
         </Page>
