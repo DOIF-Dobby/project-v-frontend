@@ -18,7 +18,7 @@ import {
   TableModelProps,
   useChange,
 } from 'doif-react-kit';
-import React, { FormEvent, useCallback, useMemo, useState } from 'react';
+import React, { FormEvent, useCallback, useState } from 'react';
 import { defaultValue } from '../../../common/commonValue';
 import mergeValid from '../../../common/mergeValid';
 import useAsyncAction, {
@@ -29,7 +29,9 @@ import useAsyncAction, {
 import useAsyncGetAction, { getAction } from '../../../hooks/useAsyncGetAction';
 import useButtons, { ButtonInfoProps } from '../../../hooks/useButtons';
 import useCodes from '../../../hooks/useCodes';
+import useLabels from '../../../hooks/useLabels';
 import usePage from '../../../hooks/usePage';
+import useTableModel from '../../../hooks/useTableModel';
 
 // table row data
 let row: any = {};
@@ -78,7 +80,7 @@ function ResourceMenu() {
       menuDescription: '',
       menuCategory: '',
       menuUrl: '',
-      menuStatus: '',
+      menuStatus: 'ENABLE',
       menuIcon: '',
       menuSort: '',
     });
@@ -105,7 +107,7 @@ function ResourceMenu() {
     categoryName: '',
     categoryDescription: '',
     categoryParent: '',
-    categoryStatus: '',
+    categoryStatus: 'ENABLE',
     categoryIcon: '',
     categorySort: '',
   });
@@ -143,29 +145,46 @@ function ResourceMenu() {
     ),
   }));
 
+  // 라벨들
+  const {
+    LABEL_RESOURCE_MENU_CODE,
+    LABEL_RESOURCE_MENU_NAME,
+    LABEL_RESOURCE_MENU_DESCRIPTION,
+    LABEL_RESOURCE_MENU_STATUS,
+    LABEL_RESOURCE_MENU_URL,
+    LABEL_RESOURCE_MENU_ICON,
+    LABEL_RESOURCE_MENU_SORT,
+    LABEL_RESOURCE_MENU_PARENT_CATEGORY,
+    LABEL_RESOURCE_MENU_CAPTION,
+    LABEL_RESOURCE_MENU_LIST,
+    LABEL_RESOURCE_CATEGORY_NAME,
+    LABEL_RESOURCE_CATEGORY_CODE,
+    LABEL_RESOURCE_CATEGORY_CAPTION,
+  } = useLabels(pageData);
+
   // 테이블 model
-  const model: TableModelProps[] = useMemo(
-    () => [
+  const model: TableModelProps[] = useTableModel(
+    [
       {
-        label: '메뉴명',
+        label: 'LABEL_RESOURCE_MENU_NAME',
         name: 'name',
         width: 250,
         align: 'left',
       },
       {
-        label: '메뉴 코드',
+        label: 'LABEL_RESOURCE_MENU_CODE',
         name: 'code',
         width: 250,
         align: 'left',
       },
       {
-        label: '설명',
+        label: 'LABEL_RESOURCE_MENU_DESCRIPTION',
         name: 'description',
         width: 350,
         align: 'left',
       },
       {
-        label: '사용 가능 상태',
+        label: 'LABEL_RESOURCE_MENU_STATUS',
         name: 'statusName',
         width: 120,
         formatter: (cellValue: any) => {
@@ -177,17 +196,18 @@ function ResourceMenu() {
         },
       },
       {
-        label: 'URL',
+        label: 'LABEL_RESOURCE_MENU_URL',
         name: 'url',
         width: 250,
         align: 'left',
       },
       {
-        label: '아이콘',
+        label: 'LABEL_RESOURCE_MENU_ICON',
         name: 'icon',
         width: 120,
         formatter: (cellValue: any) => {
-          return cellValue.props.value ? (
+          return cellValue.props.value &&
+            iconTypes.includes(cellValue.props.value) ? (
             <Icon icon={cellValue.props.value} />
           ) : (
             cellValue
@@ -195,12 +215,12 @@ function ResourceMenu() {
         },
       },
       {
-        label: '구분',
+        label: 'LABEL_RESOURCE_MENU_TYPE',
         name: 'typeName',
         width: 120,
       },
       {
-        label: '정렬 순서',
+        label: 'LABEL_RESOURCE_MENU_SORT',
         name: 'sort',
         width: 100,
       },
@@ -210,7 +230,7 @@ function ResourceMenu() {
         hidden: true,
       },
     ],
-    [],
+    pageData,
   );
 
   /******************************************************************
@@ -504,7 +524,7 @@ function ResourceMenu() {
       </Form>
 
       <Table
-        caption="메뉴 자원 목록"
+        caption={LABEL_RESOURCE_MENU_LIST}
         model={model}
         buttons={buttons}
         enableTreeTable
@@ -514,12 +534,15 @@ function ResourceMenu() {
         onSelectRow={onSelectRow}
       />
 
-      <Modal visible={pageState.openMenuModal} title="메뉴 등록/수정">
+      <Modal
+        visible={pageState.openMenuModal}
+        title={LABEL_RESOURCE_MENU_CAPTION}
+      >
         <Form onSubmit={onSaveMenu}>
           <Row>
             <LabelInput
               required
-              label="메뉴 코드"
+              label={LABEL_RESOURCE_MENU_CODE}
               value={menuCode}
               onChange={onChangeMenuForm}
               name="menuCode"
@@ -530,7 +553,7 @@ function ResourceMenu() {
           <Row>
             <LabelInput
               required
-              label="메뉴명"
+              label={LABEL_RESOURCE_MENU_NAME}
               value={menuName}
               onChange={onChangeMenuForm}
               name="menuName"
@@ -539,7 +562,7 @@ function ResourceMenu() {
           </Row>
           <Row>
             <LabelInput
-              label="메뉴 설명"
+              label={LABEL_RESOURCE_MENU_DESCRIPTION}
               value={menuDescription}
               onChange={onChangeMenuForm}
               name="menuDescription"
@@ -548,7 +571,7 @@ function ResourceMenu() {
           <Row>
             <LabelInput
               required
-              label="메뉴 URL"
+              label={LABEL_RESOURCE_MENU_URL}
               value={menuUrl}
               onChange={onChangeMenuForm}
               name="menuUrl"
@@ -558,7 +581,7 @@ function ResourceMenu() {
           <Row>
             <LabelSelect
               required
-              label="상위 카테고리"
+              label={LABEL_RESOURCE_MENU_PARENT_CATEGORY}
               data={hierarchyCategoriesData}
               defaultValue={{ code: '', name: '최상위 카테고리' }}
               value={menuCategory}
@@ -570,7 +593,7 @@ function ResourceMenu() {
           </Row>
           <Row>
             <LabelSelect
-              label="메뉴 아이콘"
+              label={LABEL_RESOURCE_MENU_ICON}
               defaultValue={defaultValue}
               data={iconCodes}
               value={menuIcon}
@@ -581,7 +604,7 @@ function ResourceMenu() {
           <Row>
             <LabelInput
               required
-              label="메뉴 정렬"
+              label={LABEL_RESOURCE_MENU_SORT}
               value={menuSort}
               onChange={onChangeMenuForm}
               name="menuSort"
@@ -591,7 +614,7 @@ function ResourceMenu() {
           <Row>
             <LabelSelect
               required
-              label="사용 가능 상태"
+              label={LABEL_RESOURCE_MENU_STATUS}
               data={enableCodes}
               defaultValue={defaultValue}
               value={menuStatus}
@@ -611,12 +634,15 @@ function ResourceMenu() {
         </Form>
       </Modal>
 
-      <Modal visible={pageState.openCategoryModal} title="카테고리 등록/수정">
+      <Modal
+        visible={pageState.openCategoryModal}
+        title={LABEL_RESOURCE_CATEGORY_CAPTION}
+      >
         <Form onSubmit={onSaveCategory}>
           <Row>
             <LabelInput
               required
-              label="카테고리 코드"
+              label={LABEL_RESOURCE_CATEGORY_CODE}
               value={categoryCode}
               onChange={onChangeCategoryForm}
               disabled={pageState.disableCategoryItem}
@@ -627,7 +653,7 @@ function ResourceMenu() {
           <Row>
             <LabelInput
               required
-              label="카테고리명"
+              label={LABEL_RESOURCE_CATEGORY_NAME}
               value={categoryName}
               onChange={onChangeCategoryForm}
               name="categoryName"
@@ -636,7 +662,7 @@ function ResourceMenu() {
           </Row>
           <Row>
             <LabelInput
-              label="카테고리 설명"
+              label={LABEL_RESOURCE_MENU_DESCRIPTION}
               value={categoryDescription}
               onChange={onChangeCategoryForm}
               name="categoryDescription"
@@ -645,7 +671,7 @@ function ResourceMenu() {
           </Row>
           <Row>
             <LabelSelect
-              label="상위 카테고리"
+              label={LABEL_RESOURCE_MENU_PARENT_CATEGORY}
               data={hierarchyCategoriesData}
               defaultValue={{ code: '', name: '최상위 카테고리' }}
               value={categoryParent}
@@ -656,7 +682,7 @@ function ResourceMenu() {
           </Row>
           <Row>
             <LabelSelect
-              label="카테고리 아이콘"
+              label={LABEL_RESOURCE_MENU_ICON}
               defaultValue={defaultValue}
               data={iconCodes}
               value={categoryIcon}
@@ -667,7 +693,7 @@ function ResourceMenu() {
           <Row>
             <LabelInput
               required
-              label="카테고리 정렬"
+              label={LABEL_RESOURCE_MENU_SORT}
               value={categorySort}
               onChange={onChangeCategoryForm}
               name="categorySort"
@@ -677,7 +703,7 @@ function ResourceMenu() {
           <Row>
             <LabelSelect
               required
-              label="사용 가능 상태"
+              label={LABEL_RESOURCE_MENU_STATUS}
               data={enableCodes}
               defaultValue={defaultValue}
               value={categoryStatus}

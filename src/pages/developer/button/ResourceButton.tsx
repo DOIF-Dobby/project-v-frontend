@@ -3,6 +3,8 @@ import {
   Container,
   DeleteDialog,
   Form,
+  Icon,
+  iconTypes,
   InFormContainer,
   LabelInput,
   LabelSelect,
@@ -32,7 +34,7 @@ import useTableModel from '../../../hooks/useTableModel';
 
 // table row data
 let pageRow: any = {};
-let labelRow: any = {};
+let buttonRow: any = {};
 // button 클릭시 등록/수정 타입
 let buttonType: string = '';
 
@@ -40,12 +42,12 @@ let buttonType: string = '';
  * 라벨 자원 관리 페이지
  * @returns ResourceLabel
  */
-function ResourceLabel() {
+function ResourceButton() {
   /******************************************************************
    * 기본 데이터 및 state
    *******************************************************************/
   // 페이지 데이터 조회
-  const [pageData] = usePage('/api/pages/resources/label');
+  const [pageData] = usePage('/api/pages/resources/button');
   // 코드 조회
   const [enableCodes]: any = useCodes('ENABLE_STATUS', pageData);
 
@@ -67,32 +69,38 @@ function ResourceLabel() {
     name: '',
     description: '',
     status: 'ENABLE',
+    url: '',
+    httpMethod: '',
+    icon: '',
   });
 
-  const { code, name, description, status } = form;
+  const { code, name, description, status, url, httpMethod, icon } = form;
 
   // 라벨들
   const {
-    LABEL_RESOURCE_LABEL_CODE,
-    LABEL_RESOURCE_LABEL_NAME,
-    LABEL_RESOURCE_LABEL_DESCRIPTION,
-    LABEL_RESOURCE_LABEL_STATUS,
-    LABEL_RESOURCE_LABEL_CAPTION,
-    LABEL_RESOURCE_LABEL_LIST,
-    LABEL_RESOURCE_LABEL_PAGE_LIST,
+    LABEL_RESOURCE_BUTTON_CODE,
+    LABEL_RESOURCE_BUTTON_NAME,
+    LABEL_RESOURCE_BUTTON_DESCRIPTION,
+    LABEL_RESOURCE_BUTTON_STATUS,
+    LABEL_RESOURCE_BUTTON_URL,
+    LABEL_RESOURCE_BUTTON_HTTP_METHOD,
+    LABEL_RESOURCE_BUTTON_ICON,
+    LABEL_RESOURCE_BUTTON_CAPTION,
+    LABEL_RESOURCE_BUTTON_LIST,
+    LABEL_RESOURCE_BUTTON_PAGE_LIST,
   } = useLabels(pageData);
 
   // 페이지 테이블 model
   const pageTableModel: TableModelProps[] = useTableModel(
     [
       {
-        label: 'LABEL_RESOURCE_LABEL_PAGE_CODE',
+        label: 'LABEL_RESOURCE_BUTTON_PAGE_CODE',
         name: 'code',
         width: 250,
         align: 'left',
       },
       {
-        label: 'LABEL_RESOURCE_LABEL_PAGE_NAME',
+        label: 'LABEL_RESOURCE_BUTTON_PAGE_NAME',
         name: 'name',
         width: 300,
         align: 'left',
@@ -106,29 +114,41 @@ function ResourceLabel() {
     pageData,
   );
 
+  // icon 데이터들
+  const iconCodes = iconTypes.map((icon) => ({
+    code: icon,
+    name: icon,
+    render: (
+      <Container>
+        <Icon icon={icon} />
+        <div>{icon}</div>
+      </Container>
+    ),
+  }));
+
   // 라벨 테이블 model
   const labelTableModel: TableModelProps[] = useTableModel(
     [
       {
-        label: 'LABEL_RESOURCE_LABEL_CODE',
+        label: 'LABEL_RESOURCE_BUTTON_CODE',
         name: 'code',
         width: 250,
         align: 'left',
       },
       {
-        label: 'LABEL_RESOURCE_LABEL_NAME',
+        label: 'LABEL_RESOURCE_BUTTON_NAME',
         name: 'name',
+        width: 150,
+        align: 'left',
+      },
+      {
+        label: 'LABEL_RESOURCE_BUTTON_DESCRIPTION',
+        name: 'description',
         width: 250,
         align: 'left',
       },
       {
-        label: 'LABEL_RESOURCE_LABEL_DESCRIPTION',
-        name: 'description',
-        width: 300,
-        align: 'left',
-      },
-      {
-        label: 'LABEL_RESOURCE_LABEL_STATUS',
+        label: 'LABEL_RESOURCE_BUTTON_STATUS',
         name: 'statusName',
         width: 120,
         formatter: (cellValue: any) => {
@@ -136,6 +156,30 @@ function ResourceLabel() {
             <span style={{ color: '#02c902' }}>{cellValue}</span>
           ) : (
             <span style={{ color: '#fc3d3d' }}>{cellValue}</span>
+          );
+        },
+      },
+      {
+        label: 'LABEL_RESOURCE_BUTTON_URL',
+        name: 'url',
+        width: 200,
+        align: 'left',
+      },
+      {
+        label: 'LABEL_RESOURCE_BUTTON_HTTP_METHOD',
+        name: 'httpMethod',
+        width: 100,
+      },
+      {
+        label: 'LABEL_RESOURCE_BUTTON_ICON',
+        name: 'icon',
+        width: 100,
+        formatter: (cellValue: any) => {
+          return cellValue.props.value &&
+            iconTypes.includes(cellValue.props.value) ? (
+            <Icon icon={cellValue.props.value} />
+          ) : (
+            cellValue
           );
         },
       },
@@ -160,7 +204,7 @@ function ResourceLabel() {
       openDeleteDialog: false,
       disablePutDeleteButton: true,
     }));
-    getLabels();
+    getButtons();
   };
 
   // 페이지 데이터 조회
@@ -175,11 +219,11 @@ function ResourceLabel() {
     },
   );
 
-  // 라벨 데이터 조회
-  const [labels, getLabels]: any = useAsyncGetAction(
+  // 버튼 데이터 조회
+  const [buttons, getButtons]: any = useAsyncGetAction(
     () =>
       pageData &&
-      getAction(`/api/resources/pages/${pageRow.resourceId}/labels`),
+      getAction(`/api/resources/pages/${pageRow.resourceId}/buttons`),
     [pageData],
     {
       skip: true,
@@ -192,10 +236,10 @@ function ResourceLabel() {
     },
   );
 
-  // 라벨 등록
-  const [postLabel, postLabelValid] = useAsyncAction(
+  // 버튼 등록
+  const [postButton, postButtonValid] = useAsyncAction(
     () =>
-      postAction('/api/resources/labels', {
+      postAction('/api/resources/buttons', {
         ...form,
         pageId: pageRow.resourceId,
       }),
@@ -204,17 +248,17 @@ function ResourceLabel() {
     },
   );
 
-  // 라벨 수정
-  const [putLabel, putLabelValid] = useAsyncAction(
-    () => putAction('/api/resources/labels/' + labelRow.resourceId, form),
+  // 버튼 수정
+  const [putButton, putButtonValid] = useAsyncAction(
+    () => putAction('/api/resources/buttons/' + buttonRow.resourceId, form),
     {
       onSuccess: asyncSucCallback,
     },
   );
 
-  // 라벨 삭제
-  const [deleteLabel] = useAsyncAction(
-    () => deleteAction('/api/resources/labels/' + labelRow.resourceId),
+  // 버튼 삭제
+  const [deleteButton] = useAsyncAction(
+    () => deleteAction('/api/resources/buttons/' + buttonRow.resourceId),
     {
       onSuccess: asyncSucCallback,
     },
@@ -226,7 +270,7 @@ function ResourceLabel() {
   // 테이블 버튼들
   const buttonInfos: ButtonInfoProps[] = [
     {
-      id: 'BTN_RESOURCE_LABEL_ADD',
+      id: 'BTN_RESOURCE_BUTTON_ADD',
       disable: pageState.disablePostButton,
       onClick: (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
         setPageState((state) => ({
@@ -240,7 +284,7 @@ function ResourceLabel() {
       },
     },
     {
-      id: 'BTN_RESOURCE_LABEL_MODIFY',
+      id: 'BTN_RESOURCE_BUTTON_MODIFY',
       disable: pageState.disablePutDeleteButton,
       onClick: (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
         setPageState((state) => ({
@@ -251,23 +295,26 @@ function ResourceLabel() {
         buttonType = 'put';
 
         replaceForm({
-          name: labelRow.name,
-          description: labelRow.description,
-          status: labelRow.status,
-          code: labelRow.code,
-          pageId: labelRow.pageId,
+          name: buttonRow.name,
+          description: buttonRow.description,
+          status: buttonRow.status,
+          code: buttonRow.code,
+          url: buttonRow.url,
+          httpMethod: buttonRow.httpMethod,
+          icon: buttonRow.icon,
+          pageId: buttonRow.pageId,
         });
       },
     },
     {
-      id: 'BTN_RESOURCE_LABEL_DELETE',
+      id: 'BTN_RESOURCE_BUTTON_DELETE',
       disable: pageState.disablePutDeleteButton,
       onClick: (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
         setPageState((state) => ({ ...state, openDeleteDialog: true }));
       },
     },
   ];
-  const buttons = useButtons(pageData && pageData.buttonMap, buttonInfos);
+  const tableButtons = useButtons(pageData && pageData.buttonMap, buttonInfos);
 
   // 페이지 자원 목록 테이블 select 시 콜백
   const onSelectPageTableRow = useCallback(
@@ -278,43 +325,33 @@ function ResourceLabel() {
         disablePostButton: false,
       }));
 
-      getLabels();
+      getButtons();
     },
-    [getLabels],
+    [getButtons],
   );
 
-  // 라벨 자원 목록 테이블 select 시 콜백
-  const onSelectLabelTableRow = useCallback((id: string, rowValue: any) => {
-    labelRow = rowValue;
+  // 버튼 자원 목록 테이블 select 시 콜백
+  const onSelectButtonTableRow = useCallback((id: string, rowValue: any) => {
+    buttonRow = rowValue;
     setPageState((state) => ({
       ...state,
       disablePutDeleteButton: false,
     }));
   }, []);
 
-  // 라벨 저장
-  const onSaveLabel = (e: FormEvent<HTMLFormElement>) => {
+  // 버튼 저장
+  const onSaveButton = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     if (buttonType === 'post') {
-      postLabel();
+      postButton();
     } else if (buttonType === 'put') {
-      putLabel();
-    }
-  };
-
-  // 라벨 이름 blur 이벤트
-  const onBlurName = (e: React.FocusEvent<HTMLInputElement>) => {
-    if (!description) {
-      replaceForm({
-        ...form,
-        description: name,
-      });
+      putButton();
     }
   };
 
   // Validation
-  const labelValid = mergeValid([postLabelValid, putLabelValid]);
+  const buttonValid = mergeValid([postButtonValid, putButtonValid]);
 
   // 페이지 데이터 로딩 전엔 Loading 표시
   if (!pageData) {
@@ -325,7 +362,7 @@ function ResourceLabel() {
     <>
       <DeleteDialog
         visible={pageState.openDeleteDialog}
-        onConfirm={deleteLabel}
+        onConfirm={deleteButton}
         onCancel={() =>
           setPageState((state) => ({ ...state, openDeleteDialog: false }))
         }
@@ -336,7 +373,7 @@ function ResourceLabel() {
       <Container>
         <div style={{ width: '35%' }}>
           <Table
-            caption={LABEL_RESOURCE_LABEL_PAGE_LIST}
+            caption={LABEL_RESOURCE_BUTTON_PAGE_LIST}
             model={pageTableModel}
             data={pages ? pages.content : []}
             onSelectRow={onSelectPageTableRow}
@@ -344,42 +381,44 @@ function ResourceLabel() {
         </div>
         <div style={{ width: '65%' }}>
           <Table
-            caption={LABEL_RESOURCE_LABEL_LIST}
-            buttons={buttons}
+            caption={LABEL_RESOURCE_BUTTON_LIST}
+            buttons={tableButtons}
             model={labelTableModel}
-            data={labels ? labels.content : []}
-            onSelectRow={onSelectLabelTableRow}
+            data={buttons ? buttons.content : []}
+            onSelectRow={onSelectButtonTableRow}
           />
         </div>
       </Container>
 
-      <Modal visible={pageState.openModal} title={LABEL_RESOURCE_LABEL_CAPTION}>
-        <Form onSubmit={onSaveLabel}>
+      <Modal
+        visible={pageState.openModal}
+        title={LABEL_RESOURCE_BUTTON_CAPTION}
+      >
+        <Form onSubmit={onSaveButton}>
           <Row>
             <LabelInput
               required
-              label={LABEL_RESOURCE_LABEL_CODE}
+              label={LABEL_RESOURCE_BUTTON_CODE}
               value={code}
               onChange={onChangeForm}
               name="code"
               disabled={pageState.disableItem}
-              validation={labelValid.code}
+              validation={buttonValid.code}
             />
           </Row>
           <Row>
             <LabelInput
               required
-              label={LABEL_RESOURCE_LABEL_NAME}
+              label={LABEL_RESOURCE_BUTTON_NAME}
               value={name}
               onChange={onChangeForm}
-              onBlur={onBlurName}
               name="name"
-              validation={labelValid.name}
+              validation={buttonValid.name}
             />
           </Row>
           <Row>
             <LabelInput
-              label={LABEL_RESOURCE_LABEL_DESCRIPTION}
+              label={LABEL_RESOURCE_BUTTON_DESCRIPTION}
               value={description}
               onChange={onChangeForm}
               name="description"
@@ -388,13 +427,52 @@ function ResourceLabel() {
           <Row>
             <LabelSelect
               required
-              label={LABEL_RESOURCE_LABEL_STATUS}
+              label={LABEL_RESOURCE_BUTTON_HTTP_METHOD}
+              value={httpMethod}
+              onChange={onChangeForm}
+              defaultValue={defaultValue}
+              data={[
+                { code: 'GET', name: 'GET' },
+                { code: 'POST', name: 'POST' },
+                { code: 'PUT', name: 'PUT' },
+                { code: 'DELETE', name: 'DELETE' },
+              ]}
+              name="httpMethod"
+              validation={buttonValid.httpMethod}
+            />
+          </Row>
+          <Row>
+            <LabelInput
+              required
+              label={LABEL_RESOURCE_BUTTON_URL}
+              value={url}
+              onChange={onChangeForm}
+              name="url"
+              placeholder="'/api'로 시작해야 합니다."
+              validation={buttonValid.url}
+            />
+          </Row>
+          <Row>
+            <LabelSelect
+              label={LABEL_RESOURCE_BUTTON_ICON}
+              data={iconCodes}
+              defaultValue={defaultValue}
+              value={icon}
+              onChange={onChangeForm}
+              name="icon"
+              validation={buttonValid.icon}
+            />
+          </Row>
+          <Row>
+            <LabelSelect
+              required
+              label={LABEL_RESOURCE_BUTTON_STATUS}
               data={enableCodes}
               defaultValue={defaultValue}
               value={status}
               onChange={onChangeForm}
               name="status"
-              validation={labelValid.status}
+              validation={buttonValid.status}
             />
           </Row>
           <InFormContainer>
@@ -411,4 +489,4 @@ function ResourceLabel() {
   );
 }
 
-export default ResourceLabel;
+export default ResourceButton;

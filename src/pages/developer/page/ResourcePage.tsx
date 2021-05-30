@@ -25,7 +25,9 @@ import useAsyncAction, {
 import useAsyncGetAction, { getAction } from '../../../hooks/useAsyncGetAction';
 import useButtons, { ButtonInfoProps } from '../../../hooks/useButtons';
 import useCodes from '../../../hooks/useCodes';
+import useLabels from '../../../hooks/useLabels';
 import usePage from '../../../hooks/usePage';
+import useTableModel from '../../../hooks/useTableModel';
 
 // table row data
 let row: any = {};
@@ -62,34 +64,45 @@ function ResourcePage() {
     name: '',
     description: '',
     url: '',
-    status: '',
+    status: 'ENABLE',
   });
 
   const { code, name, description, url, status } = form;
 
+  // 라벨들
+  const {
+    LABEL_RESOURCE_PAGE_CODE,
+    LABEL_RESOURCE_PAGE_NAME,
+    LABEL_RESOURCE_PAGE_DESCRIPTION,
+    LABEL_RESOURCE_PAGE_STATUS,
+    LABEL_RESOURCE_PAGE_URL,
+    LABEL_RESOURCE_PAGE_LIST,
+    LABEL_RESOURCE_PAGE_CAPTION,
+  } = useLabels(pageData);
+
   // 테이블 model
-  const model: TableModelProps[] = useMemo(
-    () => [
+  const model: TableModelProps[] = useTableModel(
+    [
       {
-        label: '페이지 코드',
+        label: 'LABEL_RESOURCE_PAGE_CODE',
         name: 'code',
         width: 250,
         align: 'left',
       },
       {
-        label: '페이지명',
+        label: 'LABEL_RESOURCE_PAGE_NAME',
         name: 'name',
         width: 250,
         align: 'left',
       },
       {
-        label: '설명',
+        label: 'LABEL_RESOURCE_PAGE_DESCRIPTION',
         name: 'description',
         width: 450,
         align: 'left',
       },
       {
-        label: '사용 가능 상태',
+        label: 'LABEL_RESOURCE_PAGE_STATUS',
         name: 'statusName',
         width: 120,
         formatter: (cellValue: any) => {
@@ -101,7 +114,7 @@ function ResourcePage() {
         },
       },
       {
-        label: 'URL',
+        label: 'LABEL_RESOURCE_PAGE_URL',
         name: 'url',
         width: 350,
         align: 'left',
@@ -112,7 +125,7 @@ function ResourcePage() {
         hidden: true,
       },
     ],
-    [],
+    pageData,
   );
 
   /******************************************************************
@@ -253,19 +266,19 @@ function ResourcePage() {
 
       <PageHeader menuName={pageData.menuName} menuList={pageData.menuList} />
       <Table
-        caption="페이지 자원 목록"
+        caption={LABEL_RESOURCE_PAGE_LIST}
         model={model}
         buttons={buttons}
         data={pages ? pages.content : []}
         onSelectRow={onSelectRow}
       />
 
-      <Modal visible={pageState.openModal} title="페이지 등록/수정">
+      <Modal visible={pageState.openModal} title={LABEL_RESOURCE_PAGE_CAPTION}>
         <Form onSubmit={onSavePage}>
           <Row>
             <LabelInput
               required
-              label="페이지 코드"
+              label={LABEL_RESOURCE_PAGE_CODE}
               value={code}
               onChange={onChangeForm}
               name="code"
@@ -276,7 +289,7 @@ function ResourcePage() {
           <Row>
             <LabelInput
               required
-              label="페이지명"
+              label={LABEL_RESOURCE_PAGE_NAME}
               value={name}
               onChange={onChangeForm}
               name="name"
@@ -285,7 +298,7 @@ function ResourcePage() {
           </Row>
           <Row>
             <LabelInput
-              label="페이지 설명"
+              label={LABEL_RESOURCE_PAGE_DESCRIPTION}
               value={description}
               onChange={onChangeForm}
               name="description"
@@ -294,7 +307,7 @@ function ResourcePage() {
           <Row>
             <LabelInput
               required
-              label="URL"
+              label={LABEL_RESOURCE_PAGE_URL}
               value={url}
               onChange={onChangeForm}
               name="url"
@@ -304,7 +317,7 @@ function ResourcePage() {
           <Row>
             <LabelSelect
               required
-              label="사용 가능 상태"
+              label={LABEL_RESOURCE_PAGE_STATUS}
               data={enableCodes}
               defaultValue={defaultValue}
               value={status}
