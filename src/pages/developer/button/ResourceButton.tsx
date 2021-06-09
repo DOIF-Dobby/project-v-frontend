@@ -323,6 +323,7 @@ function ResourceButton() {
       setPageState((state) => ({
         ...state,
         disablePostButton: false,
+        disablePutDeleteButton: true,
       }));
 
       getButtons();

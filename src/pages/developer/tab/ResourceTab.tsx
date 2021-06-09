@@ -306,6 +306,7 @@ function ResourceTab() {
       setPageState((state) => ({
         ...state,
         disablePostButton: false,
+        disablePutDeleteButton: true,
       }));
 
       getTabs();

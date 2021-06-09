@@ -275,6 +275,7 @@ function ResourceLabel() {
       setPageState((state) => ({
         ...state,
         disablePostButton: false,
+        disablePutDeleteButton: true,
       }));
 
       getLabels();
