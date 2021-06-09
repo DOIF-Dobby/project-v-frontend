@@ -1,6 +1,5 @@
 import {
   CloseButton,
-  Container,
   DeleteDialog,
   Form,
   InFormContainer,
@@ -15,7 +14,8 @@ import {
   TableModelProps,
   useChange,
 } from 'doif-react-kit';
-import React, { FormEvent, useCallback, useState } from 'react';
+import { FormEvent, useCallback, useState } from 'react';
+import { defaultValue } from '../../../common/commonValue';
 import mergeValid from '../../../common/mergeValid';
 import useAsyncAction, {
   deleteAction,
@@ -30,29 +30,29 @@ import usePage from '../../../hooks/usePage';
 import useTableModel from '../../../hooks/useTableModel';
 
 // table row data
-let pageRow: any = {};
-let labelRow: any = {};
+let row: any = {};
 // button 클릭시 등록/수정 타입
 let buttonType: string = '';
 
 /**
- * 라벨 자원 관리 페이지
- * @returns ResourceLabel
+ * 페이지 자원 관리 페이지
+ * @returns ResourceMessage
  */
-function ResourceLabel() {
+function ResourceMessage() {
   /******************************************************************
    * 기본 데이터 및 state
    *******************************************************************/
   // 페이지 데이터 조회
-  const [pageData] = usePage('/api/pages/resources/label');
+  const [pageData] = usePage('/api/pages/resources/message');
   // 코드 조회
   const [enableCodes]: any = useCodes('ENABLE_STATUS', pageData);
+  // 코드 조회
+  const [messageTypes]: any = useCodes('MESSAGE_TYPE', pageData);
 
   // 초기 페이지 상태
   const initPageState = {
     openModal: false,
-    disablePostButton: true,
-    disablePutDeleteButton: true,
+    disableButton: true,
     openDeleteDialog: false,
     disableItem: false,
   };
@@ -65,69 +65,46 @@ function ResourceLabel() {
     code: '',
     name: '',
     description: '',
+    type: '',
     status: 'ENABLE',
   });
 
-  const { code, name, description, status } = form;
+  const { code, name, description, type, status } = form;
 
   // 라벨들
   const {
-    LABEL_RESOURCE_LABEL_CODE,
-    LABEL_RESOURCE_LABEL_NAME,
-    LABEL_RESOURCE_LABEL_DESCRIPTION,
-    LABEL_RESOURCE_LABEL_STATUS,
-    LABEL_RESOURCE_LABEL_CAPTION,
-    LABEL_RESOURCE_LABEL_LIST,
-    LABEL_RESOURCE_LABEL_PAGE_LIST,
+    LABEL_RESOURCE_MESSAGE_CODE,
+    LABEL_RESOURCE_MESSAGE_NAME,
+    LABEL_RESOURCE_MESSAGE_DESCRIPTION,
+    LABEL_RESOURCE_MESSAGE_STATUS,
+    LABEL_RESOURCE_MESSAGE_TYPE,
+    LABEL_RESOURCE_MESSAGE_LIST,
+    LABEL_RESOURCE_MESSAGE_CAPTION,
   } = useLabels(pageData);
 
-  // 페이지 테이블 model
-  const pageTableModel: TableModelProps[] = useTableModel(
+  // 테이블 model
+  const model: TableModelProps[] = useTableModel(
     [
       {
-        label: 'LABEL_RESOURCE_LABEL_PAGE_CODE',
+        label: 'LABEL_RESOURCE_MESSAGE_CODE',
         name: 'code',
         width: 250,
         align: 'left',
       },
       {
-        label: 'LABEL_RESOURCE_LABEL_PAGE_NAME',
+        label: 'LABEL_RESOURCE_MESSAGE_NAME',
         name: 'name',
-        width: 300,
+        width: 500,
         align: 'left',
       },
       {
-        label: '',
-        name: 'resourceId',
-        hidden: true,
-      },
-    ],
-    pageData,
-  );
-
-  // 라벨 테이블 model
-  const labelTableModel: TableModelProps[] = useTableModel(
-    [
-      {
-        label: 'LABEL_RESOURCE_LABEL_CODE',
-        name: 'code',
-        width: 250,
-        align: 'left',
-      },
-      {
-        label: 'LABEL_RESOURCE_LABEL_NAME',
-        name: 'name',
-        width: 250,
-        align: 'left',
-      },
-      {
-        label: 'LABEL_RESOURCE_LABEL_DESCRIPTION',
+        label: 'LABEL_RESOURCE_MESSAGE_DESCRIPTION',
         name: 'description',
-        width: 300,
+        width: 500,
         align: 'left',
       },
       {
-        label: 'LABEL_RESOURCE_LABEL_STATUS',
+        label: 'LABEL_RESOURCE_MESSAGE_STATUS',
         name: 'statusName',
         width: 120,
         formatter: (cellValue: any) => {
@@ -137,6 +114,11 @@ function ResourceLabel() {
             <span style={{ color: '#fc3d3d' }}>{cellValue}</span>
           );
         },
+      },
+      {
+        label: 'LABEL_RESOURCE_MESSAGE_TYPE',
+        name: 'typeName',
+        width: 120,
       },
       {
         label: '',
@@ -151,20 +133,19 @@ function ResourceLabel() {
    * Action 함수들
    ******************************************************************/
 
-  // 라벨 등록/수정/삭제 시 성공 콜백
+  // 메세지 등록/수정/삭제 시 성공 콜백
   const asyncSucCallback = () => {
     setPageState((state) => ({
       ...state,
       openModal: false,
       openDeleteDialog: false,
-      disablePutDeleteButton: true,
     }));
-    getLabels();
+    getMessages();
   };
 
-  // 페이지 데이터 조회
-  const [pages]: any = useAsyncGetAction(
-    () => pageData && getAction('/api/resources/pages'),
+  // 메세지 데이터 조회
+  const [messages, getMessages]: any = useAsyncGetAction(
+    () => pageData && getAction('/api/resources/messages'),
     [pageData],
     {
       skip: false,
@@ -174,46 +155,25 @@ function ResourceLabel() {
     },
   );
 
-  // 라벨 데이터 조회
-  const [labels, getLabels]: any = useAsyncGetAction(
-    () =>
-      pageData &&
-      getAction(`/api/resources/pages/${pageRow.resourceId}/labels`),
-    [pageData],
-    {
-      skip: true,
-      onSuccess: () => {
-        setPageState((state) => ({
-          ...state,
-          disablePostButton: false,
-        }));
-      },
-    },
-  );
-
-  // 라벨 등록
-  const [postLabel, postLabelValid] = useAsyncAction(
-    () =>
-      postAction('/api/resources/labels', {
-        ...form,
-        pageId: pageRow.resourceId,
-      }),
+  // 메세지 등록
+  const [postMessage, postMessageValid] = useAsyncAction(
+    () => postAction('/api/resources/messages', form),
     {
       onSuccess: asyncSucCallback,
     },
   );
 
-  // 라벨 수정
-  const [putLabel, putLabelValid] = useAsyncAction(
-    () => putAction('/api/resources/labels/' + labelRow.resourceId, form),
+  // 페이지 수정
+  const [putMessage, putMessageValid] = useAsyncAction(
+    () => putAction('/api/resources/messages/' + row.resourceId, form),
     {
       onSuccess: asyncSucCallback,
     },
   );
 
-  // 라벨 삭제
-  const [deleteLabel] = useAsyncAction(
-    () => deleteAction('/api/resources/labels/' + labelRow.resourceId),
+  // 페이지 삭제
+  const [deleteMessage] = useAsyncAction(
+    () => deleteAction('/api/resources/messages/' + row.resourceId),
     {
       onSuccess: asyncSucCallback,
     },
@@ -225,8 +185,7 @@ function ResourceLabel() {
   // 테이블 버튼들
   const buttonInfos: ButtonInfoProps[] = [
     {
-      id: 'BTN_RESOURCE_LABEL_ADD',
-      disable: pageState.disablePostButton,
+      id: 'BTN_RESOURCE_MESSAGE_ADD',
       onClick: (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
         setPageState((state) => ({
           ...state,
@@ -239,8 +198,8 @@ function ResourceLabel() {
       },
     },
     {
-      id: 'BTN_RESOURCE_LABEL_MODIFY',
-      disable: pageState.disablePutDeleteButton,
+      id: 'BTN_RESOURCE_MESSAGE_MODIFY',
+      disable: pageState.disableButton,
       onClick: (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
         setPageState((state) => ({
           ...state,
@@ -250,17 +209,17 @@ function ResourceLabel() {
         buttonType = 'put';
 
         replaceForm({
-          name: labelRow.name,
-          description: labelRow.description,
-          status: labelRow.status,
-          code: labelRow.code,
-          pageId: labelRow.pageId,
+          name: row.name,
+          description: row.description,
+          status: row.status,
+          code: row.code,
+          type: row.type,
         });
       },
     },
     {
-      id: 'BTN_RESOURCE_LABEL_DELETE',
-      disable: pageState.disablePutDeleteButton,
+      id: 'BTN_RESOURCE_MESSAGE_DELETE',
+      disable: pageState.disableButton,
       onClick: (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
         setPageState((state) => ({ ...state, openDeleteDialog: true }));
       },
@@ -268,41 +227,27 @@ function ResourceLabel() {
   ];
   const buttons = useButtons(pageData && pageData.buttonMap, buttonInfos);
 
-  // 페이지 자원 목록 테이블 select 시 콜백
-  const onSelectPageTableRow = useCallback(
-    (id: string, rowValue: any) => {
-      pageRow = rowValue;
-      setPageState((state) => ({
-        ...state,
-        disablePostButton: false,
-      }));
-
-      getLabels();
-    },
-    [getLabels],
-  );
-
-  // 라벨 자원 목록 테이블 select 시 콜백
-  const onSelectLabelTableRow = useCallback((id: string, rowValue: any) => {
-    labelRow = rowValue;
+  // 테이블 select 시 콜백
+  const onSelectRow = useCallback((id: string, rowValue: any) => {
+    row = rowValue;
     setPageState((state) => ({
       ...state,
-      disablePutDeleteButton: false,
+      disableButton: false,
     }));
   }, []);
 
-  // 라벨 저장
-  const onSaveLabel = (e: FormEvent<HTMLFormElement>) => {
+  // 메세지 저장
+  const onSavePage = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     if (buttonType === 'post') {
-      postLabel();
+      postMessage();
     } else if (buttonType === 'put') {
-      putLabel();
+      putMessage();
     }
   };
 
-  // 라벨 이름 blur 이벤트
+  // 메세지 이름 blur 이벤트
   const onBlurName = (e: React.FocusEvent<HTMLInputElement>) => {
     if (!description) {
       replaceForm({
@@ -313,7 +258,7 @@ function ResourceLabel() {
   };
 
   // Validation
-  const labelValid = mergeValid([postLabelValid, putLabelValid]);
+  const pageValid = mergeValid([postMessageValid, putMessageValid]);
 
   // 페이지 데이터 로딩 전엔 Loading 표시
   if (!pageData) {
@@ -324,61 +269,51 @@ function ResourceLabel() {
     <>
       <DeleteDialog
         visible={pageState.openDeleteDialog}
-        onConfirm={deleteLabel}
+        onConfirm={deleteMessage}
         onCancel={() =>
           setPageState((state) => ({ ...state, openDeleteDialog: false }))
         }
       />
 
       <PageHeader menuName={pageData.menuName} menuList={pageData.menuList} />
+      <Table
+        caption={LABEL_RESOURCE_MESSAGE_LIST}
+        model={model}
+        buttons={buttons}
+        data={messages ? messages.content : []}
+        onSelectRow={onSelectRow}
+      />
 
-      <Container>
-        <div style={{ width: '35%' }}>
-          <Table
-            caption={LABEL_RESOURCE_LABEL_PAGE_LIST}
-            model={pageTableModel}
-            data={pages ? pages.content : []}
-            onSelectRow={onSelectPageTableRow}
-          />
-        </div>
-        <div style={{ width: '65%' }}>
-          <Table
-            caption={LABEL_RESOURCE_LABEL_LIST}
-            buttons={buttons}
-            model={labelTableModel}
-            data={labels ? labels.content : []}
-            onSelectRow={onSelectLabelTableRow}
-          />
-        </div>
-      </Container>
-
-      <Modal visible={pageState.openModal} title={LABEL_RESOURCE_LABEL_CAPTION}>
-        <Form onSubmit={onSaveLabel}>
+      <Modal
+        visible={pageState.openModal}
+        title={LABEL_RESOURCE_MESSAGE_CAPTION}
+      >
+        <Form onSubmit={onSavePage}>
           <Row>
             <LabelInput
               required
-              label={LABEL_RESOURCE_LABEL_CODE}
+              label={LABEL_RESOURCE_MESSAGE_CODE}
               value={code}
               onChange={onChangeForm}
               name="code"
               disabled={pageState.disableItem}
-              validation={labelValid.code}
+              validation={pageValid.code}
             />
           </Row>
           <Row>
             <LabelInput
               required
-              label={LABEL_RESOURCE_LABEL_NAME}
+              label={LABEL_RESOURCE_MESSAGE_NAME}
               value={name}
               onChange={onChangeForm}
               onBlur={onBlurName}
               name="name"
-              validation={labelValid.name}
+              validation={pageValid.name}
             />
           </Row>
           <Row>
             <LabelInput
-              label={LABEL_RESOURCE_LABEL_DESCRIPTION}
+              label={LABEL_RESOURCE_MESSAGE_DESCRIPTION}
               value={description}
               onChange={onChangeForm}
               name="description"
@@ -387,12 +322,25 @@ function ResourceLabel() {
           <Row>
             <LabelSelect
               required
-              label={LABEL_RESOURCE_LABEL_STATUS}
+              label={LABEL_RESOURCE_MESSAGE_TYPE}
+              data={messageTypes}
+              value={type}
+              defaultValue={defaultValue}
+              onChange={onChangeForm}
+              name="type"
+              validation={pageValid.type}
+            />
+          </Row>
+          <Row>
+            <LabelSelect
+              required
+              label={LABEL_RESOURCE_MESSAGE_STATUS}
               data={enableCodes}
+              defaultValue={defaultValue}
               value={status}
               onChange={onChangeForm}
               name="status"
-              validation={labelValid.status}
+              validation={pageValid.status}
             />
           </Row>
           <InFormContainer>
@@ -409,4 +357,4 @@ function ResourceLabel() {
   );
 }
 
-export default ResourceLabel;
+export default ResourceMessage;

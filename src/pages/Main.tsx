@@ -9,7 +9,9 @@ import { useWindowSize } from '../hooks/useWindowSize';
 import ResourceButton from './developer/button/ResourceButton';
 import ResourceLabel from './developer/label/ResourceLabel';
 import ResourceMenu from './developer/menu/ResourceMenu';
+import ResourceMessage from './developer/message/ResourceMessage';
 import ResourcePage from './developer/page/ResourcePage';
+import ResourceTab from './developer/tab/ResourceTab';
 import Test from './Test';
 
 function Main() {
@@ -61,6 +63,8 @@ function Main() {
               <Route path="/dev/page" component={ResourcePage} />
               <Route path="/dev/label" component={ResourceLabel} />
               <Route path="/dev/button" component={ResourceButton} />
+              <Route path="/dev/message" component={ResourceMessage} />
+              <Route path="/dev/tab" component={ResourceTab} />
             </Container>
           </Box>
         </Page>
