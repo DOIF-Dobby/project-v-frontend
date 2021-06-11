@@ -18,18 +18,18 @@ import {
   useChange,
 } from 'doif-react-kit';
 import { FormEvent, useCallback, useState } from 'react';
-import mergeValid from '../../common/mergeValid';
+import mergeValid from '../../../common/mergeValid';
 import useAsyncAction, {
   deleteAction,
   postAction,
   putAction,
-} from '../../hooks/useAsyncAction';
-import useAsyncGetAction, { getAction } from '../../hooks/useAsyncGetAction';
-import useButtons, { ButtonInfoProps } from '../../hooks/useButtons';
-import useCodes from '../../hooks/useCodes';
-import useLabels from '../../hooks/useLabels';
-import usePage from '../../hooks/usePage';
-import useTableModel from '../../hooks/useTableModel';
+} from '../../../hooks/useAsyncAction';
+import useAsyncGetAction, { getAction } from '../../../hooks/useAsyncGetAction';
+import useButtons, { ButtonInfoProps } from '../../../hooks/useButtons';
+import useCodes from '../../../hooks/useCodes';
+import useLabels from '../../../hooks/useLabels';
+import usePage from '../../../hooks/usePage';
+import useTableModel from '../../../hooks/useTableModel';
 
 // table row data
 let row: any = {};
@@ -315,13 +315,14 @@ function SecurityUser() {
   };
 
   // Validation
-  const pageValid = mergeValid([postUserValid, putUserValid]);
+  const userValid = mergeValid([postUserValid, putUserValid]);
 
   // 페이지 데이터 로딩 전엔 Loading 표시
   if (!pageData) {
     return <Loading />;
   }
 
+  // user role 할당 버튼
   const allocateButton = pageData.buttonMap['BTN_SECURITY_USER_ROLE_ALLOCATE'];
 
   return (
@@ -354,7 +355,7 @@ function SecurityUser() {
               onChange={onChangeForm}
               name="id"
               disabled={pageState.disableItem}
-              validation={pageValid.id}
+              validation={userValid.id}
             />
           </Row>
           {!pageState.disableItem && (
@@ -366,7 +367,7 @@ function SecurityUser() {
                 onChange={onChangeForm}
                 name="password"
                 type="password"
-                validation={pageValid.password}
+                validation={userValid.password}
               />
             </Row>
           )}
@@ -377,7 +378,7 @@ function SecurityUser() {
               value={name}
               onChange={onChangeForm}
               name="name"
-              validation={pageValid.name}
+              validation={userValid.name}
             />
           </Row>
           <Row>
@@ -388,7 +389,7 @@ function SecurityUser() {
               value={status}
               onChange={onChangeForm}
               name="status"
-              validation={pageValid.status}
+              validation={userValid.status}
             />
           </Row>
           <InFormContainer>

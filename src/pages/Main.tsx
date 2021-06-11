@@ -12,7 +12,8 @@ import ResourceMenu from './developer/menu/ResourceMenu';
 import ResourceMessage from './developer/message/ResourceMessage';
 import ResourcePage from './developer/page/ResourcePage';
 import ResourceTab from './developer/tab/ResourceTab';
-import SecurityUser from './security/SecurityUser';
+import SecurityRole from './security/role/SecurityRole';
+import SecurityUser from './security/user/SecurityUser';
 import Test from './Test';
 
 function Main() {
@@ -63,6 +64,7 @@ function Main() {
 
               {/* 보안 관리 카테고리 */}
               <Route path="/security/user" component={SecurityUser} />
+              <Route path="/security/role" component={SecurityRole} />
 
               {/* 개발자 카테고리 */}
               <Route path="/dev/menu" component={ResourceMenu} />
