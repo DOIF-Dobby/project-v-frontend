@@ -176,6 +176,12 @@ function ResourceMessage() {
     () => deleteAction('/api/resources/messages/' + row.resourceId),
     {
       onSuccess: asyncSucCallback,
+      onError: () => {
+        setPageState((state) => ({
+          ...state,
+          openDeleteDialog: false,
+        }));
+      },
     },
   );
 

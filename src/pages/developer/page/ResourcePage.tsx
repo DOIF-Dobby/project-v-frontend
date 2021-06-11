@@ -175,6 +175,12 @@ function ResourcePage() {
     () => deleteAction('/api/resources/pages/' + row.resourceId),
     {
       onSuccess: asyncSucCallback,
+      onError: () => {
+        setPageState((state) => ({
+          ...state,
+          openDeleteDialog: false,
+        }));
+      },
     },
   );
 

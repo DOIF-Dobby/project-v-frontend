@@ -243,6 +243,12 @@ function ResourceTab() {
     () => deleteAction('/api/resources/tabs/' + tabRow.resourceId),
     {
       onSuccess: asyncSucCallback,
+      onError: () => {
+        setPageState((state) => ({
+          ...state,
+          openDeleteDialog: false,
+        }));
+      },
     },
   );
 

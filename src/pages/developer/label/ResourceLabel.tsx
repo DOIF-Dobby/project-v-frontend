@@ -216,6 +216,12 @@ function ResourceLabel() {
     () => deleteAction('/api/resources/labels/' + labelRow.resourceId),
     {
       onSuccess: asyncSucCallback,
+      onError: () => {
+        setPageState((state) => ({
+          ...state,
+          openDeleteDialog: false,
+        }));
+      },
     },
   );
 

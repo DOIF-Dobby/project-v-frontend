@@ -261,6 +261,12 @@ function ResourceButton() {
     () => deleteAction('/api/resources/buttons/' + buttonRow.resourceId),
     {
       onSuccess: asyncSucCallback,
+      onError: () => {
+        setPageState((state) => ({
+          ...state,
+          openDeleteDialog: false,
+        }));
+      },
     },
   );
 

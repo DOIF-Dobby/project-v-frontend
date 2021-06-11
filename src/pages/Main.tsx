@@ -12,6 +12,7 @@ import ResourceMenu from './developer/menu/ResourceMenu';
 import ResourceMessage from './developer/message/ResourceMessage';
 import ResourcePage from './developer/page/ResourcePage';
 import ResourceTab from './developer/tab/ResourceTab';
+import SecurityUser from './security/SecurityUser';
 import Test from './Test';
 
 function Main() {
@@ -59,6 +60,11 @@ function Main() {
             <Container direction="column">
               <LoadingAndDialog />
               <Route path="/" component={Test} exact />
+
+              {/* 보안 관리 카테고리 */}
+              <Route path="/security/user" component={SecurityUser} />
+
+              {/* 개발자 카테고리 */}
               <Route path="/dev/menu" component={ResourceMenu} />
               <Route path="/dev/page" component={ResourcePage} />
               <Route path="/dev/label" component={ResourceLabel} />
