@@ -17,7 +17,7 @@ import {
   TableModelProps,
   useChange,
 } from 'doif-react-kit';
-import { FormEvent, useCallback, useState } from 'react';
+import { FormEvent, useCallback, useEffect, useState } from 'react';
 import mergeValid from '../../../common/mergeValid';
 import useAsyncAction, {
   deleteAction,
@@ -36,8 +36,8 @@ let row: any = {};
 // button 클릭시 등록/수정 타입
 let buttonType: string = '';
 
-// userRole table rowData
-let userRoleTableRows: any = [];
+// userRole checked
+let checkedUserRole: any = {};
 
 /**
  * 페이지 자원 관리 페이지
@@ -137,6 +137,22 @@ function SecurityUser() {
         align: 'left',
       },
       {
+        label: '',
+        name: 'checked',
+        width: 50,
+        formatter: (cellvalue: any, rowValue: any) => {
+          return (
+            <input
+              type="checkbox"
+              defaultChecked={cellvalue.props.value}
+              onChange={(e) => {
+                checkedUserRole[rowValue.roleId] = e.target.checked;
+              }}
+            />
+          );
+        },
+      },
+      {
         label: 'LABEL_SECURITY_USER_ROLE_STATUS',
         name: 'statusName',
         width: 120,
@@ -147,11 +163,6 @@ function SecurityUser() {
             <span style={{ color: '#fc3d3d' }}>{cellValue}</span>
           );
         },
-      },
-      {
-        label: '',
-        name: 'checked',
-        hidden: true,
       },
     ],
     pageData,
@@ -218,17 +229,33 @@ function SecurityUser() {
 
   // 유저 Role 할당
   const [allocateUserRole] = useAsyncAction(
-    () =>
-      postAction('/api/user-roles', {
+    () => {
+      const checkedRoleIds = [];
+      for (const roleId in checkedUserRole) {
+        if (checkedUserRole[roleId]) {
+          checkedRoleIds.push(roleId);
+        }
+      }
+
+      return postAction('/api/user-roles', {
         userId: row.id,
-        roleIds: userRoleTableRows.map((row: any) => row.roleId),
-      }),
+        roleIds: checkedRoleIds,
+      });
+    },
     {
       onSuccess: () => {
         getUserRoles();
       },
     },
   );
+
+  useEffect(() => {
+    if (userRoles) {
+      userRoles.content.forEach((userRole: any) => {
+        checkedUserRole[userRole.roleId] = userRole.checked;
+      });
+    }
+  }, [userRoles]);
 
   /******************************************************************
    * 클라이언트 함수들
@@ -291,11 +318,6 @@ function SecurityUser() {
       ...state,
       disableButton: false,
     }));
-  }, []);
-
-  // Role 테이블 select 시 콜백
-  const onMultiSelectRow = useCallback((rowValue: any[]) => {
-    userRoleTableRows = rowValue;
   }, []);
 
   // 사용자 저장
@@ -413,8 +435,7 @@ function SecurityUser() {
           caption={LABEL_SECURITY_USER_ROLE_CAPTION}
           model={roleTableModel}
           data={userRoles ? userRoles.content : []}
-          enableMultiSelectRow
-          onMultiSelectRow={onMultiSelectRow}
+          disableFilters
         />
 
         <Container align="center" style={{ marginTop: '15px' }}>
