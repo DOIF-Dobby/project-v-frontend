@@ -144,7 +144,7 @@ function SecurityUser() {
           return (
             <input
               type="checkbox"
-              defaultChecked={cellvalue.props.value}
+              checked={checkedUserRole[rowValue.roleId]}
               onChange={(e) => {
                 checkedUserRole[rowValue.roleId] = e.target.checked;
               }}
@@ -244,7 +244,7 @@ function SecurityUser() {
     },
     {
       onSuccess: () => {
-        getUserRoles();
+        setPageState((state) => ({ ...state, openRoleModal: false }));
       },
     },
   );
@@ -346,6 +346,7 @@ function SecurityUser() {
 
   // user role 할당 버튼
   const allocateButton = pageData.buttonMap['BTN_SECURITY_USER_ROLE_ALLOCATE'];
+  console.log(allocateButton);
 
   return (
     <>

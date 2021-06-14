@@ -20,7 +20,7 @@ import {
   TableModelProps,
   useChange,
 } from 'doif-react-kit';
-import { FormEvent, useCallback, useState } from 'react';
+import { FormEvent, useCallback, useEffect, useState } from 'react';
 import mergeValid from '../../../common/mergeValid';
 import useAsyncAction, {
   deleteAction,
@@ -39,6 +39,14 @@ let row: any = {};
 // button 클릭시 등록/수정 타입
 let buttonType: string = '';
 
+// roleResource Page checked
+let checkedRoleResourcePage: any = {};
+
+// roleResource Button checked
+let checkedRoleResourceButton: any = {};
+
+// roleResource Tab checked
+let checkedRoleResourceTab: any = {};
 /**
  * 페이지 자원 관리 페이지
  * @returns SecurityRole
@@ -51,6 +59,14 @@ function SecurityRole() {
   const [pageData] = usePage('/api/pages/security/role');
   // 코드 조회
   const [enableCodes]: any = useCodes('ENABLE_STATUS', pageData);
+
+  // 버튼 자원 목록 데이터
+  const [roleResourceButtonDatas, setRoleResourceButtonDatas] = useState<any>(
+    [],
+  );
+
+  // 탭 자원 목록 데이터
+  const [roleResourceTabDatas, setRoleResourceTabDatas] = useState<any>([]);
 
   // 초기 페이지 상태
   const initPageState = {
@@ -132,6 +148,22 @@ function SecurityRole() {
         align: 'left',
       },
       {
+        label: '',
+        name: 'checked',
+        width: 50,
+        formatter: (cellvalue: any, rowValue: any) => {
+          return (
+            <input
+              type="checkbox"
+              checked={checkedRoleResourcePage[rowValue.pageId]}
+              onChange={(e) => {
+                checkedRoleResourcePage[rowValue.pageId] = e.target.checked;
+              }}
+            />
+          );
+        },
+      },
+      {
         label: 'LABEL_SECURITY_ROLE_STATUS',
         name: 'statusName',
         width: 120,
@@ -146,11 +178,6 @@ function SecurityRole() {
       {
         label: '',
         name: 'pageId',
-        hidden: true,
-      },
-      {
-        label: '',
-        name: 'checked',
         hidden: true,
       },
     ],
@@ -173,6 +200,22 @@ function SecurityRole() {
         align: 'left',
       },
       {
+        label: '',
+        name: 'checked',
+        width: 50,
+        formatter: (cellvalue: any, rowValue: any) => {
+          return (
+            <input
+              type="checkbox"
+              checked={checkedRoleResourceButton[rowValue.buttonId]}
+              onChange={(e) => {
+                checkedRoleResourceButton[rowValue.buttonId] = e.target.checked;
+              }}
+            />
+          );
+        },
+      },
+      {
         label: 'LABEL_SECURITY_ROLE_STATUS',
         name: 'statusName',
         width: 120,
@@ -187,11 +230,6 @@ function SecurityRole() {
       {
         label: '',
         name: 'buttonId',
-        hidden: true,
-      },
-      {
-        label: '',
-        name: 'checked',
         hidden: true,
       },
     ],
@@ -214,6 +252,22 @@ function SecurityRole() {
         align: 'left',
       },
       {
+        label: '',
+        name: 'checked',
+        width: 50,
+        formatter: (cellvalue: any, rowValue: any) => {
+          return (
+            <input
+              type="checkbox"
+              checked={checkedRoleResourceTab[rowValue.tabId]}
+              onChange={(e) => {
+                checkedRoleResourceTab[rowValue.tabId] = e.target.checked;
+              }}
+            />
+          );
+        },
+      },
+      {
         label: 'LABEL_SECURITY_ROLE_STATUS',
         name: 'statusName',
         width: 120,
@@ -228,11 +282,6 @@ function SecurityRole() {
       {
         label: '',
         name: 'tabId',
-        hidden: true,
-      },
-      {
-        label: '',
-        name: 'checked',
         hidden: true,
       },
     ],
@@ -302,6 +351,68 @@ function SecurityRole() {
     },
   );
 
+  // Role Resource 할당
+  const [allocateRoleResource] = useAsyncAction(
+    () => {
+      const checkedPageIds = [];
+      const checkedButtonIds = [];
+      const checkedTabIds = [];
+
+      for (const pageId in checkedRoleResourcePage) {
+        if (checkedRoleResourcePage[pageId]) {
+          checkedPageIds.push(pageId);
+        }
+      }
+
+      for (const buttonId in checkedRoleResourceButton) {
+        if (checkedRoleResourceButton[buttonId]) {
+          checkedButtonIds.push(buttonId);
+        }
+      }
+
+      for (const tabId in checkedRoleResourceTab) {
+        if (checkedRoleResourceTab[tabId]) {
+          checkedTabIds.push(tabId);
+        }
+      }
+
+      return postAction('/api/role-resources', {
+        roleId: row.roleId,
+        pages: checkedPageIds,
+        buttons: checkedButtonIds,
+        tabs: checkedTabIds,
+      });
+    },
+    {
+      onSuccess: () => {
+        setPageState((state) => ({ ...state, openRoleResourceModal: false }));
+      },
+    },
+  );
+
+  useEffect(() => {
+    if (roleResourcePages) {
+      roleResourcePages.content.forEach((roleResourcePage: any) => {
+        checkedRoleResourcePage[roleResourcePage.pageId] =
+          roleResourcePage.checked;
+
+        if (roleResourcePage.buttons && roleResourcePage.buttons.length > 0) {
+          roleResourcePage.buttons.forEach((roleResourceButton: any) => {
+            checkedRoleResourceButton[roleResourceButton.buttonId] =
+              roleResourceButton.checked;
+          });
+        }
+
+        if (roleResourcePage.tabs && roleResourcePage.tabs.length > 0) {
+          roleResourcePage.tabs.forEach((roleResourceTab: any) => {
+            checkedRoleResourceTab[roleResourceTab.tabId] =
+              roleResourceTab.checked;
+          });
+        }
+      });
+    }
+  }, [roleResourcePages]);
+
   /******************************************************************
    * 클라이언트 함수들
    ******************************************************************/
@@ -351,6 +462,8 @@ function SecurityRole() {
       onClick: (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
         getRoleResourcePages();
         setPageState((state) => ({ ...state, openRoleResourceModal: true }));
+        setRoleResourceButtonDatas([]);
+        setRoleResourceTabDatas([]);
       },
     },
   ];
@@ -365,6 +478,15 @@ function SecurityRole() {
     }));
   }, []);
 
+  // roleResourcePage 테이블 select 시 콜백
+  const onSelectRoleResourcePageRow = useCallback(
+    (id: string, rowValue: any) => {
+      setRoleResourceButtonDatas(rowValue.buttons);
+      setRoleResourceTabDatas(rowValue.tabs);
+    },
+    [],
+  );
+
   // Role 저장
   const onSaveRole = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -377,7 +499,9 @@ function SecurityRole() {
   };
 
   // RoleResource 할당
-  const onAllocateRoleResource = () => {};
+  const onAllocateRoleResource = () => {
+    allocateRoleResource();
+  };
 
   // Validation
   const roleValid = mergeValid([postRoleValid, putRoleValid]);
@@ -477,8 +601,7 @@ function SecurityRole() {
                 model={pageModel}
                 height="523px"
                 data={roleResourcePages ? roleResourcePages.content : []}
-                enableMultiSelectRow
-                // onMultiSelectRow={onMultiSelectRow}
+                onSelectRow={onSelectRoleResourcePageRow}
                 disableFilters
               />
             </div>
@@ -488,18 +611,14 @@ function SecurityRole() {
                   caption={LABEL_SECURITY_ROLE_RESOURCE_BUTTON_LIST}
                   model={buttonModel}
                   height="200px"
-                  // data={userRoles ? userRoles.content : []}
-                  data={[]}
-                  enableMultiSelectRow
+                  data={roleResourceButtonDatas}
                   disableFilters
                 />
                 <Table
                   caption={LABEL_SECURITY_ROLE_RESOURCE_TAB_LIST}
                   model={tabModel}
                   height="200px"
-                  // data={userRoles ? userRoles.content : []}
-                  data={[]}
-                  enableMultiSelectRow
+                  data={roleResourceTabDatas}
                   disableFilters
                 />
               </Container>
