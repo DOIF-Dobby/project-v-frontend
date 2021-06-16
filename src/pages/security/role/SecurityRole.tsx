@@ -47,6 +47,10 @@ let checkedRoleResourceButton: any = {};
 
 // roleResource Tab checked
 let checkedRoleResourceTab: any = {};
+
+// roleResource Menu checked
+let checkedRoleResourceMenu: any = {};
+
 /**
  * 페이지 자원 관리 페이지
  * @returns SecurityRole
@@ -75,6 +79,7 @@ function SecurityRole() {
     openDeleteDialog: false,
     disableItem: false,
     openRoleResourceModal: false,
+    openRoleResourceMenuModal: false,
   };
 
   // 페이지 상태
@@ -100,6 +105,8 @@ function SecurityRole() {
     LABEL_SECURITY_ROLE_RESOURCE_PAGE_LIST,
     LABEL_SECURITY_ROLE_RESOURCE_BUTTON_LIST,
     LABEL_SECURITY_ROLE_RESOURCE_TAB_LIST,
+    LABEL_SECURITY_ROLE_RESOURCE_MENU_CAPTION,
+    LABEL_SECURITY_ROLE_RESOURCE_MENU_LIST,
   } = useLabels(pageData);
 
   // 테이블 model
@@ -288,6 +295,63 @@ function SecurityRole() {
     pageData,
   );
 
+  // RoleResource menu model
+  const menuModel: TableModelProps[] = useTableModel(
+    [
+      {
+        label: 'LABEL_SECURITY_ROLE_RESOURCE_MENU_NAME',
+        name: 'name',
+        width: 350,
+        align: 'left',
+      },
+      {
+        label: 'LABEL_SECURITY_ROLE_RESOURCE_MENU_DESCRIPTION',
+        name: 'description',
+        width: 500,
+        align: 'left',
+      },
+      {
+        label: 'LABEL_SECURITY_ROLE_RESOURCE_MENU_TYPE',
+        name: 'typeName',
+        width: 150,
+      },
+      {
+        label: '',
+        name: 'checked',
+        width: 50,
+        formatter: (cellvalue: any, rowValue: any) => {
+          return (
+            <input
+              type="checkbox"
+              checked={checkedRoleResourceMenu[rowValue.menuId]}
+              onChange={(e) => {
+                checkedRoleResourceMenu[rowValue.menuId] = e.target.checked;
+              }}
+            />
+          );
+        },
+      },
+      {
+        label: 'LABEL_SECURITY_ROLE_STATUS',
+        name: 'statusName',
+        width: 120,
+        formatter: (cellValue: any) => {
+          return cellValue.props.value === '가능' ? (
+            <span style={{ color: '#02c902' }}>{cellValue}</span>
+          ) : (
+            <span style={{ color: '#fc3d3d' }}>{cellValue}</span>
+          );
+        },
+      },
+      {
+        label: '',
+        name: 'menuId',
+        hidden: true,
+      },
+    ],
+    pageData,
+  );
+
   /******************************************************************
    * Action 함수들
    ******************************************************************/
@@ -351,6 +415,19 @@ function SecurityRole() {
     },
   );
 
+  // RoleResource Menu 조회
+  const [roleResourceMenus, getRoleResourceMenus] = useAsyncGetAction(
+    () =>
+      pageData &&
+      getAction('/api/role-resources/menus', {
+        roleId: row.roleId,
+      }),
+    [pageData],
+    {
+      skip: true,
+    },
+  );
+
   // Role Resource 할당
   const [allocateRoleResource] = useAsyncAction(
     () => {
@@ -390,6 +467,32 @@ function SecurityRole() {
     },
   );
 
+  // Role Resource Menu 할당
+  const [allocateRoleResourceMenu] = useAsyncAction(
+    () => {
+      const checkedMenuIds = [];
+
+      for (const menuId in checkedRoleResourceMenu) {
+        if (checkedRoleResourceMenu[menuId]) {
+          checkedMenuIds.push(menuId);
+        }
+      }
+
+      return postAction('/api/role-resources/menus', {
+        roleId: row.roleId,
+        menus: checkedMenuIds,
+      });
+    },
+    {
+      onSuccess: () => {
+        setPageState((state) => ({
+          ...state,
+          openRoleResourceMenuModal: false,
+        }));
+      },
+    },
+  );
+
   useEffect(() => {
     if (roleResourcePages) {
       roleResourcePages.content.forEach((roleResourcePage: any) => {
@@ -412,6 +515,28 @@ function SecurityRole() {
       });
     }
   }, [roleResourcePages]);
+
+  const recursiveChecked = useCallback((roleResourceMenu: any) => {
+    if (roleResourceMenu) {
+      if (roleResourceMenu.subRows && roleResourceMenu.subRows.length > 0) {
+        roleResourceMenu.subRows.forEach((el: any) => {
+          checkedRoleResourceMenu[el.menuId] = el.checked;
+          recursiveChecked(el);
+        });
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    if (roleResourceMenus) {
+      roleResourceMenus.content.forEach((roleResourceMenu: any) => {
+        checkedRoleResourceMenu[roleResourceMenu.menuId] =
+          roleResourceMenu.checked;
+
+        recursiveChecked(roleResourceMenu);
+      });
+    }
+  }, [roleResourceMenus, recursiveChecked]);
 
   /******************************************************************
    * 클라이언트 함수들
@@ -454,6 +579,17 @@ function SecurityRole() {
       disable: pageState.disableButton,
       onClick: (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
         setPageState((state) => ({ ...state, openDeleteDialog: true }));
+      },
+    },
+    {
+      id: 'BTN_SECURITY_ROLE_RESOURCE_MENU_FIND',
+      disable: pageState.disableButton,
+      onClick: (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
+        getRoleResourceMenus();
+        setPageState((state) => ({
+          ...state,
+          openRoleResourceMenuModal: true,
+        }));
       },
     },
     {
@@ -503,6 +639,11 @@ function SecurityRole() {
     allocateRoleResource();
   };
 
+  // RoleResourceMenu 할당
+  const onAllocateRoleResourceMenu = () => {
+    allocateRoleResourceMenu();
+  };
+
   // Validation
   const roleValid = mergeValid([postRoleValid, putRoleValid]);
 
@@ -511,9 +652,13 @@ function SecurityRole() {
     return <Loading />;
   }
 
-  // user role 할당 버튼
+  // role resource 할당 버튼
   const allocateButton =
     pageData.buttonMap['BTN_SECURITY_ROLE_RESOURCE_ALLOCATE'];
+
+  // role resource menu 할당 버튼
+  const allocateMenuButton =
+    pageData.buttonMap['BTN_SECURITY_ROLE_RESOURCE_MENU_ALLOCATE'];
 
   return (
     <>
@@ -577,6 +722,48 @@ function SecurityRole() {
             />
           </InFormContainer>
         </Form>
+      </Modal>
+
+      {/* Menu Role Resource 모달 */}
+      <Modal
+        visible={pageState.openRoleResourceMenuModal}
+        title={LABEL_SECURITY_ROLE_RESOURCE_MENU_CAPTION}
+        width="1500px"
+      >
+        <Container direction="column">
+          <Form>
+            <Row>
+              <Column>
+                <Label>Role 명</Label>
+                <Field>{row.name}</Field>
+              </Column>
+            </Row>
+          </Form>
+          <Table
+            caption={LABEL_SECURITY_ROLE_RESOURCE_MENU_LIST}
+            model={menuModel}
+            data={roleResourceMenus ? roleResourceMenus.content : []}
+            disableFilters
+            enableTreeTable
+          />
+        </Container>
+
+        <Container align="center" style={{ marginTop: '15px' }}>
+          {allocateMenuButton && (
+            <Button onClick={onAllocateRoleResourceMenu}>
+              <Icon icon={allocateMenuButton.icon} />
+              {allocateMenuButton.name}
+            </Button>
+          )}
+          <CloseButton
+            onClick={() =>
+              setPageState((state) => ({
+                ...state,
+                openRoleResourceMenuModal: false,
+              }))
+            }
+          />
+        </Container>
       </Modal>
 
       {/* Role Resource 모달 */}
