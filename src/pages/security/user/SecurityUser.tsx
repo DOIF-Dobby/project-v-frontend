@@ -40,7 +40,7 @@ let buttonType: string = '';
 let checkedUserRole: any = {};
 
 /**
- * 페이지 자원 관리 페이지
+ * 유저 관리 페이지
  * @returns SecurityUser
  */
 function SecurityUser() {
