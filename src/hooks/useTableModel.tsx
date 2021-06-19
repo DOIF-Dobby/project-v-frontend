@@ -6,7 +6,7 @@ export default function useTableModel(
   pageData: any,
   deps: Array<any> = [],
 ): TableModelProps[] {
-  const dependencies = [data, pageData].concat(deps);
+  const dependencies = [pageData].concat(deps);
 
   const model: TableModelProps[] = useMemo(
     () =>

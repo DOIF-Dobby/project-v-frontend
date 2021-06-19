@@ -15,6 +15,7 @@ import ResourceTab from './developer/tab/ResourceTab';
 import SecurityCacheRefresh from './security/cacheRefresh/SecurityCacheRefresh';
 import SecurityRole from './security/role/SecurityRole';
 import SecurityUser from './security/user/SecurityUser';
+import SystemProperty from './system/property/SystemProperty';
 import Test from './Test';
 
 function Main() {
@@ -62,6 +63,9 @@ function Main() {
             <Container direction="column">
               <LoadingAndDialog />
               <Route path="/" component={Test} exact />
+
+              {/* 시스템 관리 카테고리 */}
+              <Route path="/system/property" component={SystemProperty} />
 
               {/* 보안 관리 카테고리 */}
               <Route path="/security/user" component={SecurityUser} />

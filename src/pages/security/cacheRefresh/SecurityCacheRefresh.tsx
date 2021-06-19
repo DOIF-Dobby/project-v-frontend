@@ -31,46 +31,6 @@ function SecurityCacheRefresh() {
     postAction('/api/cache/refresh/all'),
   );
 
-  const [test, setTest] = useState({ hi: 'zzz', hello: '123' });
-  const model: TableModelProps[] = useMemo(
-    () => [
-      {
-        label: 'Row 선택 시',
-        name: 'selectRow',
-        width: 500,
-        align: 'left',
-      },
-      {
-        label: '호호호',
-        name: 'hohoho',
-        width: 500,
-        align: 'left',
-      },
-    ],
-    [],
-  );
-
-  const data = useMemo(
-    () => [
-      {
-        selectRow: 'Row 선택 시 onSelectRow 함수를 실행합니다.',
-        hohoho: '호호호호호',
-      },
-      {
-        selectRow: 'Row 선택 시 onSelectRow 함수를 실행합니다.',
-        hohoho: '호호호호호',
-      },
-    ],
-    [],
-  );
-
-  const onSelectRow = useCallback((id: string, rowValue: Object) => {
-    // alert(
-    //   'rowId: ' + id + '\r\n' + 'rowValue: \r\n' + JSON.stringify(rowValue),
-    // );
-    setTest((state) => ({ ...state, hello: state.hello + '1' }));
-  }, []);
-
   // 페이지 데이터 로딩 전엔 Loading 표시
   if (!pageData) {
     return <Loading />;
@@ -91,14 +51,6 @@ function SecurityCacheRefresh() {
           </Button>
         )}
       </Container>
-
-      {test.hello}
-      <Table
-        caption="Row 선택 시"
-        model={model}
-        data={data}
-        onSelectRow={onSelectRow}
-      />
     </>
   );
 }

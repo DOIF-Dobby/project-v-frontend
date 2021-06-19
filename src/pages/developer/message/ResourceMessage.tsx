@@ -35,7 +35,7 @@ let row: any = {};
 let buttonType: string = '';
 
 /**
- * 페이지 자원 관리 페이지
+ * 메세지 자원 관리 페이지
  * @returns ResourceMessage
  */
 function ResourceMessage() {
