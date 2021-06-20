@@ -4396,10 +4396,10 @@ doctrine@^3.0.0:
   dependencies:
     esutils "^2.0.2"
 
-doif-react-kit@^0.0.127:
-  version "0.0.127"
-  resolved "https://registry.yarnpkg.com/doif-react-kit/-/doif-react-kit-0.0.127.tgz#bdbaca099d073595708a216c2374b91289012faa"
-  integrity sha512-PxGQpxzr3dieXggnkhr2rnlJuLmqqqJrnfyLejEQrg5DFJeck4cC3dV+695NTYwBMuB+0BmrJGKsnUPfDdZyLQ==
+doif-react-kit@^0.0.134:
+  version "0.0.134"
+  resolved "https://registry.yarnpkg.com/doif-react-kit/-/doif-react-kit-0.0.134.tgz#e4c8ef7bd3547f95fa5b2c3af6ad86a3355c70a1"
+  integrity sha512-JNrVmJ7Bl2vQFRfPjoHC9q0Wnn0zbqXT+mb6oRDCWyTTzoZyDptH6Y1h37I4EmqheC+Jp1u986pfYBK0rfhS+Q==
   dependencies:
     "@types/codemirror" "^0.0.108"
     "@types/react-datepicker" "^3.1.3"

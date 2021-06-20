@@ -243,7 +243,7 @@ function ResourceMessage() {
   }, []);
 
   // 메세지 저장
-  const onSavePage = (e: FormEvent<HTMLFormElement>) => {
+  const onSaveMessage = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     if (buttonType === 'post') {
@@ -264,7 +264,7 @@ function ResourceMessage() {
   };
 
   // Validation
-  const pageValid = mergeValid([postMessageValid, putMessageValid]);
+  const messageValid = mergeValid([postMessageValid, putMessageValid]);
 
   // 페이지 데이터 로딩 전엔 Loading 표시
   if (!pageData) {
@@ -294,7 +294,7 @@ function ResourceMessage() {
         visible={pageState.openModal}
         title={LABEL_RESOURCE_MESSAGE_CAPTION}
       >
-        <Form onSubmit={onSavePage}>
+        <Form onSubmit={onSaveMessage}>
           <Row>
             <LabelInput
               required
@@ -303,7 +303,7 @@ function ResourceMessage() {
               onChange={onChangeForm}
               name="code"
               disabled={pageState.disableItem}
-              validation={pageValid.code}
+              validation={messageValid.code}
             />
           </Row>
           <Row>
@@ -314,7 +314,7 @@ function ResourceMessage() {
               onChange={onChangeForm}
               onBlur={onBlurName}
               name="name"
-              validation={pageValid.name}
+              validation={messageValid.name}
             />
           </Row>
           <Row>
@@ -334,7 +334,7 @@ function ResourceMessage() {
               defaultValue={defaultValue}
               onChange={onChangeForm}
               name="type"
-              validation={pageValid.type}
+              validation={messageValid.type}
             />
           </Row>
           <Row>
@@ -346,7 +346,7 @@ function ResourceMessage() {
               value={status}
               onChange={onChangeForm}
               name="status"
-              validation={pageValid.status}
+              validation={messageValid.status}
             />
           </Row>
           <InFormContainer>
