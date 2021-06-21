@@ -2,7 +2,7 @@ import axios from 'axios';
 import { useEffect, useState } from 'react';
 
 export default function useCodes(groupCode: string, pageData: any) {
-  const [codes, setCodes] = useState([]);
+  const [codes, setCodes] = useState<any>([]);
 
   useEffect(() => {
     pageData &&
@@ -12,7 +12,7 @@ export default function useCodes(groupCode: string, pageData: any) {
             groupCode: groupCode,
           },
         })
-        .then((response) => setCodes(response.data));
+        .then((response) => setCodes(() => [...response.data]));
   }, [pageData, groupCode]);
 
   return [codes, setCodes];

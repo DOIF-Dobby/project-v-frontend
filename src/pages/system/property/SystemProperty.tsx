@@ -16,20 +16,19 @@ import {
   useChange,
 } from 'doif-react-kit';
 import { FormEvent, useCallback, useMemo, useState } from 'react';
+import { defaultValue } from '../../../common/commonValue';
+import mergeValid from '../../../common/mergeValid';
 import useAsyncAction, {
   deleteAction,
   postAction,
   putAction,
 } from '../../../hooks/useAsyncAction';
 import useAsyncGetAction, { getAction } from '../../../hooks/useAsyncGetAction';
-import { ButtonInfoProps } from '../../../hooks/useButtons';
+import useButtons, { ButtonInfoProps } from '../../../hooks/useButtons';
+import useCodes from '../../../hooks/useCodes';
 import useLabels from '../../../hooks/useLabels';
 import usePage from '../../../hooks/usePage';
-import useButtons from '../../../hooks/useButtons';
 import useTableModel from '../../../hooks/useTableModel';
-import useCodes from '../../../hooks/useCodes';
-import mergeValid from '../../../common/mergeValid';
-import { defaultValue } from '../../../common/commonValue';
 
 // table row data
 let row: any = {};
@@ -51,7 +50,8 @@ function SystemProperty() {
   // 초기 페이지 상태
   const initPageState = {
     openModal: false,
-    disableButton: true,
+    disableModifyButton: true,
+    disableDeleteButton: true,
     openDeleteDialog: false,
     disableItem: false,
   };
@@ -107,15 +107,21 @@ function SystemProperty() {
   const model: TableModelProps[] = useTableModel(
     [
       {
-        label: 'LABEL_SYSTEM_PROPERTY_GROUP',
+        label: 'LABEL_SYSTEM_PROPERTY_GROUP_NAME',
         name: 'propertyGroupName',
-        width: 250,
+        width: 200,
+        align: 'left',
+      },
+      {
+        label: 'LABEL_SYSTEM_PROPERTY_GROUP',
+        name: 'propertyGroup',
+        width: 200,
         align: 'left',
       },
       {
         label: 'LABEL_SYSTEM_PROPERTY_PROPERTY',
         name: 'property',
-        width: 350,
+        width: 300,
         align: 'left',
       },
       {
@@ -138,11 +144,6 @@ function SystemProperty() {
       {
         label: '',
         name: 'systemPropertyId',
-        hidden: true,
-      },
-      {
-        label: '',
-        name: 'propertyGroup',
         hidden: true,
       },
       {
@@ -234,7 +235,7 @@ function SystemProperty() {
     },
     {
       id: 'BTN_SYSTEM_PROPERTY_MODIFY',
-      disable: pageState.disableButton,
+      disable: pageState.disableModifyButton,
       onClick: (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
         setPageState((state) => ({
           ...state,
@@ -244,17 +245,17 @@ function SystemProperty() {
         buttonType = 'put';
 
         replaceForm({
-          name: row.name,
+          propertyGroup: row.propertyGroup,
+          property: row.property,
+          value: row.value,
           description: row.description,
-          status: row.status,
-          code: row.code,
-          type: row.type,
+          updatable: row.updatable ? 'true' : 'false',
         });
       },
     },
     {
       id: 'BTN_SYSTEM_PROPERTY_DELETE',
-      disable: pageState.disableButton,
+      disable: pageState.disableDeleteButton,
       onClick: (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
         setPageState((state) => ({ ...state, openDeleteDialog: true }));
       },
@@ -273,7 +274,8 @@ function SystemProperty() {
     row = rowValue;
     setPageState((state) => ({
       ...state,
-      disableButton: false,
+      disableModifyButton: !row.updatable,
+      disableDeleteButton: false,
     }));
   }, []);
 
@@ -341,7 +343,7 @@ function SystemProperty() {
         title={LABEL_SYSTEM_PROPERTY_CAPTION}
       >
         <Form onSubmit={onSaveSystemProperty}>
-          {/* <Row>
+          <Row>
             <LabelSelect
               required
               label={LABEL_SYSTEM_PROPERTY_GROUP}
@@ -353,7 +355,7 @@ function SystemProperty() {
               disabled={pageState.disableItem}
               validation={systemPropertyValid.propertyGroup}
             />
-          </Row> */}
+          </Row>
           <Row>
             <LabelInput
               required
