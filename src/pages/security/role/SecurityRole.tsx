@@ -585,6 +585,7 @@ function SecurityRole() {
       id: 'BTN_SECURITY_ROLE_RESOURCE_MENU_FIND',
       disable: pageState.disableButton,
       onClick: (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
+        checkedRoleResourceMenu = {};
         getRoleResourceMenus();
         setPageState((state) => ({
           ...state,
@@ -596,6 +597,7 @@ function SecurityRole() {
       id: 'BTN_SECURITY_ROLE_RESOURCE_PAGE_FIND',
       disable: pageState.disableButton,
       onClick: (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
+        checkedRoleResourcePage = {};
         getRoleResourcePages();
         setPageState((state) => ({ ...state, openRoleResourceModal: true }));
         setRoleResourceButtonDatas([]);

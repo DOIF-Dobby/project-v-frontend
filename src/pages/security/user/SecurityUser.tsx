@@ -304,6 +304,7 @@ function SecurityUser() {
       id: 'BTN_SECURITY_USER_ROLE_FIND',
       disable: pageState.disableButton,
       onClick: (e: React.MouseEvent<HTMLButtonElement, MouseEvent>) => {
+        checkedUserRole = {};
         getUserRoles();
         setPageState((state) => ({ ...state, openRoleModal: true }));
       },
