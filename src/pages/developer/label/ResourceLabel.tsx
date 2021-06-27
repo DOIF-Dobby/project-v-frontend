@@ -8,7 +8,6 @@ import {
   LabelSelect,
   Loading,
   Modal,
-  PageHeader,
   Row,
   SaveButton,
   Table,
@@ -17,6 +16,7 @@ import {
 } from 'doif-react-kit';
 import React, { FormEvent, useCallback, useState } from 'react';
 import mergeValid from '../../../common/mergeValid';
+import PageHeaderInfo from '../../../components/PageHeaderInfo';
 import useAsyncAction, {
   deleteAction,
   postAction,
@@ -337,7 +337,7 @@ function ResourceLabel() {
         }
       />
 
-      <PageHeader menuName={pageData.menuName} menuList={pageData.menuList} />
+      <PageHeaderInfo pageData={pageData} />
 
       <Container>
         <div style={{ width: '35%' }}>

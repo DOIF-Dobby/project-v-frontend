@@ -22,6 +22,7 @@ import {
 } from 'doif-react-kit';
 import { FormEvent, useCallback, useEffect, useState } from 'react';
 import mergeValid from '../../../common/mergeValid';
+import PageHeaderInfo from '../../../components/PageHeaderInfo';
 import useAsyncAction, {
   deleteAction,
   postAction,
@@ -672,7 +673,8 @@ function SecurityRole() {
         }
       />
 
-      <PageHeader menuName={pageData.menuName} menuList={pageData.menuList} />
+      <PageHeaderInfo pageData={pageData} />
+
       <Table
         caption={LABEL_SECURITY_ROLE_LIST}
         model={model}

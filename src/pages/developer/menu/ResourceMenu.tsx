@@ -10,7 +10,6 @@ import {
   LabelSelect,
   Loading,
   Modal,
-  PageHeader,
   Row,
   SaveButton,
   SearchButton,
@@ -21,6 +20,7 @@ import {
 import React, { FormEvent, useCallback, useState } from 'react';
 import { defaultValue } from '../../../common/commonValue';
 import mergeValid from '../../../common/mergeValid';
+import PageHeaderInfo from '../../../components/PageHeaderInfo';
 import useAsyncAction, {
   deleteAction,
   postAction,
@@ -515,7 +515,7 @@ function ResourceMenu() {
         }
       />
 
-      <PageHeader menuName={pageData.menuName} menuList={pageData.menuList} />
+      <PageHeaderInfo pageData={pageData} />
 
       <Form onSubmit={onSearchMenus}>
         <InFormContainer align="right">

@@ -16,8 +16,10 @@ import {
   useChange,
 } from 'doif-react-kit';
 import { FormEvent, useCallback, useMemo, useState } from 'react';
+import { Helmet } from 'react-helmet-async';
 import { defaultValue } from '../../../common/commonValue';
 import mergeValid from '../../../common/mergeValid';
+import PageHeaderInfo from '../../../components/PageHeaderInfo';
 import useAsyncAction, {
   deleteAction,
   postAction,
@@ -311,7 +313,7 @@ function SystemProperty() {
         }
       />
 
-      <PageHeader menuName={pageData.menuName} menuList={pageData.menuList} />
+      <PageHeaderInfo pageData={pageData} />
 
       <Form onSubmit={onSearchSystemProperty}>
         <Row>

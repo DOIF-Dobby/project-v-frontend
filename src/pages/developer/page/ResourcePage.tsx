@@ -17,6 +17,7 @@ import {
 import React, { FormEvent, useCallback, useMemo, useState } from 'react';
 import { defaultValue } from '../../../common/commonValue';
 import mergeValid from '../../../common/mergeValid';
+import PageHeaderInfo from '../../../components/PageHeaderInfo';
 import useAsyncAction, {
   deleteAction,
   postAction,
@@ -270,7 +271,8 @@ function ResourcePage() {
         }
       />
 
-      <PageHeader menuName={pageData.menuName} menuList={pageData.menuList} />
+      <PageHeaderInfo pageData={pageData} />
+
       <Table
         caption={LABEL_RESOURCE_PAGE_LIST}
         model={model}

@@ -1,4 +1,5 @@
 import { Button, Container, Icon, Loading, PageHeader } from 'doif-react-kit';
+import PageHeaderInfo from '../../../components/PageHeaderInfo';
 import useAsyncAction, { postAction } from '../../../hooks/useAsyncAction';
 import usePage from '../../../hooks/usePage';
 
@@ -33,7 +34,8 @@ function SecurityCacheRefresh() {
 
   return (
     <>
-      <PageHeader menuName={pageData.menuName} menuList={pageData.menuList} />
+      <PageHeaderInfo pageData={pageData} />
+
       <Container>
         {refreshAllCacheButton && (
           <Button onClick={refreshAllCache}>
