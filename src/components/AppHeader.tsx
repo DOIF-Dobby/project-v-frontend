@@ -1,5 +1,6 @@
 import axios from 'axios';
 import {
+  Box,
   Button,
   Container,
   Header,
@@ -9,6 +10,7 @@ import {
   useOutsideAlerter,
 } from 'doif-react-kit';
 import { DoifDataProps } from 'doif-react-kit/dist/types/props/DoifCommonProps';
+import _ from 'lodash';
 import React, {
   RefObject,
   useCallback,
@@ -17,7 +19,9 @@ import React, {
   useState,
 } from 'react';
 import { useMutation } from 'react-query';
+import { Link } from 'react-router-dom';
 import { useRecoilState, useSetRecoilState } from 'recoil';
+import styled from 'styled-components';
 import useAccessToken from '../hooks/useAccessToken';
 import defaultProfilePicture from '../images/default-profile-picture.png';
 import { loginSelector, themeState } from '../pages/Index';
@@ -40,6 +44,8 @@ function AppHeader({ paddingLeft, onClickHamburgerButton }: AppHeaderProps) {
     name: '',
     profilePicture: '',
   });
+
+  const [menuItems, setMenuItems] = useState([]);
 
   const setLogin = useSetRecoilState(loginSelector);
 
@@ -85,11 +91,7 @@ function AppHeader({ paddingLeft, onClickHamburgerButton }: AppHeaderProps) {
   /** SearchField 닫기 버튼 클릭했을 때 */
   const onClickSearchItem = useCallback(() => {
     setVisibleSearchField(false);
-  }, []);
-
-  /** ProfileField 아이템 클릭했을 때 */
-  const onClickProfileItem = useCallback(() => {
-    setVisibleProfileField(false);
+    setMenuItems([]);
   }, []);
 
   const onClickLogout = useCallback(() => {
@@ -102,22 +104,40 @@ function AppHeader({ paddingLeft, onClickHamburgerButton }: AppHeaderProps) {
     setVisibleSettingField(false);
   }, []);
 
-  /** Search 검색했을 때 */
-  const onInputSearch = useCallback(
-    (event: React.FormEvent<HTMLInputElement>) => {
+  const onInputDebounceSearch = _.debounce((search: string) => {
+    if (search) {
       setVisibleSearchField(true);
-      const searchItem = (
-        <div style={{ padding: '0.5rem' }}>
-          <div style={{ border: `1px solid red` }} onClick={onClickSearchItem}>
-            {event.currentTarget.value}
-          </div>
-        </div>
-      );
 
-      setSearchField(searchItem);
-    },
-    [onClickSearchItem],
-  );
+      axios
+        .get('/api/accessible-menu', {
+          params: {
+            search,
+          },
+        })
+        .then((response) => {
+          const accessibleMenu = response.data.map((menu: any) => {
+            return (
+              <MenuItem
+                key={menu.code}
+                menu={menu}
+                onClick={onClickSearchItem}
+              />
+            );
+          });
+
+          setSearchField(
+            <Box style={{ height: '400px', overflow: 'auto' }}>
+              {accessibleMenu}
+            </Box>,
+          );
+        });
+    }
+  }, 200);
+
+  /** Search 검색했을 때 */
+  const onInputSearch = (event: React.FormEvent<HTMLInputElement>) => {
+    onInputDebounceSearch(event.currentTarget.value);
+  };
 
   /** Profile 클릭했을 때 */
   const onClickProfile = useCallback(
@@ -125,18 +145,13 @@ function AppHeader({ paddingLeft, onClickHamburgerButton }: AppHeaderProps) {
       setVisibleProfileField((visibleProfileField) => !visibleProfileField);
       const profileItem = (
         <div style={{ padding: '0.5rem' }}>
-          <div style={{ border: `1px solid red` }} onClick={onClickProfileItem}>
-            프로필 변경
-          </div>
-          <div style={{ border: `1px solid red` }} onClick={onClickLogout}>
-            로그아웃
-          </div>
+          <div onClick={onClickLogout}>로그아웃</div>
         </div>
       );
 
       setProfileField(profileItem);
     },
-    [onClickProfileItem, onClickLogout],
+    [onClickLogout],
   );
 
   /** Setting 클릭했을 때 */
@@ -158,7 +173,7 @@ function AppHeader({ paddingLeft, onClickHamburgerButton }: AppHeaderProps) {
       left={paddingLeft}
       defaultProfilePicture={
         loginUser.profilePicture ? (
-          <img src={loginUser.profilePicture} />
+          <img src={loginUser.profilePicture} alt="프로필 이미지" />
         ) : (
           <img src={defaultProfilePicture} alt="프로필 이미지" />
         )
@@ -188,6 +203,47 @@ const themeData: Array<DoifDataProps> = Object.keys(theme).map((t) => ({
   code: t,
   name: t,
 }));
+
+const StyledMenuItem = styled.div`
+  /* background-color: ${(props) => props.theme.subColors.pageBackground}; */
+
+  & + & {
+    padding-top: 0.25rem;
+    border-top: 1px dashed ${(props) => props.theme.subColors.pageBackground};
+  }
+
+  a {
+    text-decoration: none;
+  }
+
+  div.menu-wrapper {
+    /* background-color: ${(props) => props.theme.subColors.boxBackground}; */
+    padding: 0.5rem;
+    border-radius: 4px;
+  }
+
+  div.menu-path {
+    color: ${(props) => props.theme.pageHeaderColors.menuListItemName};
+    font-size: 0.9rem;
+  }
+
+  div.menu-name {
+    color: ${(props) => props.theme.pageHeaderColors.menuName};
+  }
+`;
+
+function MenuItem({ menu, onClick }: any) {
+  return (
+    <StyledMenuItem>
+      <Link to={menu.url} onClick={onClick}>
+        <div className="menu-wrapper">
+          <div className="menu-path">{menu.menuPath}</div>
+          <div className="menu-name">{menu.name}</div>
+        </div>
+      </Link>
+    </StyledMenuItem>
+  );
+}
 
 function Setting({ onClickCloseButton }: SettingProps) {
   const [theme, setTheme] = useRecoilState(themeState);
