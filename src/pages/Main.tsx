@@ -16,7 +16,7 @@ import SecurityCacheRefresh from './security/cacheRefresh/SecurityCacheRefresh';
 import SecurityRole from './security/role/SecurityRole';
 import SecurityUser from './security/user/SecurityUser';
 import SystemProperty from './system/property/SystemProperty';
-import Test from './Test';
+import Test from './DefaultPage';
 
 function Main() {
   const [isFold, setIsFold] = useState(() => {

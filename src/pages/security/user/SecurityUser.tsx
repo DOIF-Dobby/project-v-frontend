@@ -1,11 +1,16 @@
+import axios from 'axios';
 import {
   Button,
   CloseButton,
+  Column,
   Container,
   DeleteDialog,
+  Field,
   Form,
   Icon,
   InFormContainer,
+  Input,
+  Label,
   LabelInput,
   LabelSelect,
   Loading,
@@ -70,9 +75,12 @@ function SecurityUser() {
     name: '',
     password: '',
     status: 'VALID',
+    profilePicturePath: '',
   });
+  // 프로필 이미지
+  const [profilePicture, setProfilePicture] = useState<File>();
 
-  const { id, name, password, status } = form;
+  const { id, name, password, status, profilePicturePath } = form;
 
   // 라벨들
   const {
@@ -83,6 +91,7 @@ function SecurityUser() {
     LABEL_SECURITY_USER_CAPTION,
     LABEL_SECURITY_USER_LIST,
     LABEL_SECURITY_USER_ROLE_CAPTION,
+    LABEL_SECURITY_USER_PROFILE_PICTURE,
   } = useLabels(pageData);
 
   // 테이블 model
@@ -164,6 +173,11 @@ function SecurityUser() {
           );
         },
       },
+      {
+        label: '',
+        name: 'profilePicture',
+        hidden: true,
+      },
     ],
     pageData,
   );
@@ -198,7 +212,17 @@ function SecurityUser() {
   const [postUser, postUserValid] = useAsyncAction(
     () => postAction('/api/users', form),
     {
-      onSuccess: asyncSucCallback,
+      onSuccess: () => {
+        if (profilePicture) {
+          const formData = new FormData();
+          formData.append('file', profilePicture);
+          axios
+            .put('/api/users/' + form.id + '/profile-picture', formData)
+            .then(() => asyncSucCallback());
+        } else {
+          asyncSucCallback();
+        }
+      },
     },
   );
 
@@ -206,7 +230,17 @@ function SecurityUser() {
   const [putUser, putUserValid] = useAsyncAction(
     () => putAction('/api/users/' + row.id, form),
     {
-      onSuccess: asyncSucCallback,
+      onSuccess: () => {
+        if (profilePicture) {
+          const formData = new FormData();
+          formData.append('file', profilePicture);
+          axios
+            .put('/api/users/' + form.id + '/profile-picture', formData)
+            .then(() => asyncSucCallback());
+        } else {
+          asyncSucCallback();
+        }
+      },
     },
   );
 
@@ -247,6 +281,11 @@ function SecurityUser() {
         setPageState((state) => ({ ...state, openRoleModal: false }));
       },
     },
+  );
+
+  // 프로필 사진 삭제
+  const [deleteProfilePicture] = useAsyncAction(() =>
+    deleteAction('/api/users/' + form.id + '/profile-picture'),
   );
 
   useEffect(() => {
@@ -290,6 +329,7 @@ function SecurityUser() {
           id: row.id,
           name: row.name,
           status: row.status,
+          profilePicturePath: row.profilePicture,
         });
       },
     },
@@ -337,6 +377,18 @@ function SecurityUser() {
     allocateUserRole();
   };
 
+  // 이미지 변경
+  const onChangeProfilePicture = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      setProfilePicture(e.target.files[0]);
+    }
+  };
+
+  // 이미지 삭제
+  const onProfilePictureDelete = () => {
+    deleteProfilePicture();
+  };
+
   // Validation
   const userValid = mergeValid([postUserValid, putUserValid]);
 
@@ -347,6 +399,9 @@ function SecurityUser() {
 
   // user role 할당 버튼
   const allocateButton = pageData.buttonMap['BTN_SECURITY_USER_ROLE_ALLOCATE'];
+  // 프로필 삭제 버튼
+  const deleteProfilePictureButton =
+    pageData.buttonMap['BTN_SECURITY_USER_DELETE_PROFILE_PICTURE'];
 
   return (
     <>
@@ -415,6 +470,30 @@ function SecurityUser() {
               name="status"
               validation={userValid.status}
             />
+          </Row>
+          <Row>
+            <Column>
+              <Label>{LABEL_SECURITY_USER_PROFILE_PICTURE}</Label>
+              <Field>
+                <Input
+                  variant="underline"
+                  type="file"
+                  name="profilePicture"
+                  onChange={onChangeProfilePicture}
+                />
+                {deleteProfilePictureButton && pageState.disableItem && (
+                  <Button onClick={onProfilePictureDelete}>삭제</Button>
+                )}
+              </Field>
+            </Column>
+          </Row>
+          <Row>
+            <Column>
+              <Label>{LABEL_SECURITY_USER_PROFILE_PICTURE}</Label>
+              <Field>
+                <img src={profilePicturePath} />
+              </Field>
+            </Column>
           </Row>
           <InFormContainer>
             <SaveButton />

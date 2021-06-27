@@ -1,4 +1,4 @@
-import { Button, Container, Icon, Loading, PageHeader } from 'doif-react-kit';
+import { Button, Container, Icon, Loading } from 'doif-react-kit';
 import PageHeaderInfo from '../../../components/PageHeaderInfo';
 import useAsyncAction, { postAction } from '../../../hooks/useAsyncAction';
 import usePage from '../../../hooks/usePage';

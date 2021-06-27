@@ -18,6 +18,7 @@ import React, {
 } from 'react';
 import { useMutation } from 'react-query';
 import { useRecoilState, useSetRecoilState } from 'recoil';
+import useAccessToken from '../hooks/useAccessToken';
 import defaultProfilePicture from '../images/default-profile-picture.png';
 import { loginSelector, themeState } from '../pages/Index';
 
@@ -35,12 +36,26 @@ function AppHeader({ paddingLeft, onClickHamburgerButton }: AppHeaderProps) {
   const [visibleSearchField, setVisibleSearchField] = useState(false);
   const [visibleProfileField, setVisibleProfileField] = useState(false);
   const [visibleSettingField, setVisibleSettingField] = useState(false);
+  const [loginUser, setLoginUser] = useState({
+    name: '',
+    profilePicture: '',
+  });
+
   const setLogin = useSetRecoilState(loginSelector);
+
   const logoutMutation = useMutation(() => axios.post('/logout'), {
     onSuccess: (res) => {
       setLogin(res.data);
     },
   });
+
+  useAccessToken(
+    useCallback(() => {
+      axios.get('/api/users/login-user').then((response) => {
+        setLoginUser(response.data);
+      });
+    }, []),
+  );
 
   // SearchField 바깥 쪽 클릭했을 때 닫히게 하는 함수
   const searchFieldRef: RefObject<HTMLDivElement> = useRef(null);
@@ -139,10 +154,14 @@ function AppHeader({ paddingLeft, onClickHamburgerButton }: AppHeaderProps) {
 
   return (
     <Header
-      profileName="임진성"
+      profileName={loginUser.name}
       left={paddingLeft}
       defaultProfilePicture={
-        <img src={defaultProfilePicture} alt="프로필 이미지" />
+        loginUser.profilePicture ? (
+          <img src={loginUser.profilePicture} />
+        ) : (
+          <img src={defaultProfilePicture} alt="프로필 이미지" />
+        )
       }
       onClickMenuButton={onClickHamburgerButton}
       onInputSearch={onInputSearch}
