@@ -3,6 +3,9 @@ import { Container } from 'doif-react-kit';
 import { useEffect, useReducer } from 'react';
 import { useSetRecoilState } from 'recoil';
 import { dialogState, loadingState } from '../components/LoadingAndDialog';
+import issueAccessToken, {
+  isValidAccessToken,
+} from '../common/issueAccessToken';
 
 /**
  * get 요청 시 사용
@@ -73,6 +76,8 @@ function useAsyncGetAction(
   const fetchData = async () => {
     setLoading(true);
     try {
+      // AccessToken 만료 되었으면 재발급
+      await issueAccessToken();
       const data = await callback();
       dispatch({ type: 'SUCCESS', data });
       setLoading(false);

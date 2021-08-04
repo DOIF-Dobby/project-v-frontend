@@ -2,6 +2,7 @@ import axios from 'axios';
 import { Container } from 'doif-react-kit';
 import { useReducer } from 'react';
 import { useSetRecoilState } from 'recoil';
+import issueAccessToken from '../common/issueAccessToken';
 import { dialogState, loadingState } from '../components/LoadingAndDialog';
 
 /**
@@ -119,6 +120,8 @@ function useAsyncAction(callback: Function, options?: AsyncActionTypes) {
   const fetchData = async () => {
     setLoading(true);
     try {
+      // AccessToken 만료 되었으면 재발급
+      await issueAccessToken();
       const data = await callback();
       dispatch({ type: 'SUCCESS', data });
       setLoading(false);

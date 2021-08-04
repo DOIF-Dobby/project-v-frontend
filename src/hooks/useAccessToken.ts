@@ -1,8 +1,8 @@
-import axios from 'axios';
 import { useEffect, useReducer } from 'react';
 import { useSetRecoilState } from 'recoil';
-import { responseStatusState } from '../pages/Index';
+import issueAccessToken from '../common/issueAccessToken';
 import { loadingState } from '../components/LoadingAndDialog';
+import { responseStatusState } from '../pages/Index';
 
 function reducer(state: any, action: any) {
   switch (action.type) {
@@ -35,14 +35,13 @@ export default function useAccessToken(onSuccess?: Function) {
   });
 
   useEffect(() => {
-    dispatch({ type: 'LOADING' });
-    setLoading(true);
+    const fetchData = async () => {
+      dispatch({ type: 'LOADING' });
+      setLoading(true);
 
-    axios
-      .get('/token/access-token')
-      .then((response) => {
-        axios.defaults.headers.common['Authorization'] =
-          response.headers.authorization;
+      try {
+        // AccessToken 만료 되었으면 재발급
+        await issueAccessToken();
 
         dispatch({ type: 'SUCCESS' });
         setLoading(false);
@@ -50,12 +49,14 @@ export default function useAccessToken(onSuccess?: Function) {
         if (onSuccess) {
           onSuccess();
         }
-      })
-      .catch((error) => {
+      } catch (error) {
         setResponseStatus(error.response.status);
         dispatch({ type: 'ERROR', error });
         setLoading(false);
-      });
+      }
+    };
+
+    fetchData();
   }, [onSuccess, setResponseStatus, setLoading]);
 
   return [state.loading, state.error];

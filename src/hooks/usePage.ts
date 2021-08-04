@@ -3,6 +3,9 @@ import { useCallback, useEffect, useReducer } from 'react';
 import { useSetRecoilState } from 'recoil';
 import { responseStatusState } from '../pages/Index';
 import { loadingState } from '../components/LoadingAndDialog';
+import issueAccessToken, {
+  isValidAccessToken,
+} from '../common/issueAccessToken';
 
 function reducer(state: any, action: any) {
   switch (action.type) {
@@ -32,11 +35,8 @@ export default function usePage(url: string, onSuccess?: Function) {
   const fetchPageData = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await axios.get('/token/access-token');
-
-      axios.defaults.headers.common['Authorization'] =
-        response.headers.authorization;
-
+      // AccessToken 만료 되었으면 재발급
+      await issueAccessToken();
       const responsePageData = await axios.get(url, {
         params: {
           menuPath: window.location.pathname,
